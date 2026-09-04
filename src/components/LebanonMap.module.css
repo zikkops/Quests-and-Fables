@@ -1,0 +1,184 @@
+.figure {
+  margin: 0;
+  display: grid;
+  gap: 16px;
+  justify-items: center;
+}
+
+.frame {
+  position: relative;
+  width: 100%;
+  max-width: 320px;
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  /* The render's own background is near-black; the ring stops it floating. */
+  border: 1px solid var(--line);
+  box-shadow: 0 30px 70px -46px rgb(0 0 0 / 0.95);
+}
+
+.image {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* ---- the corridor -------------------------------------------------------
+   Six towns from Beirut up to Jbeil, each a bright core inside a soft halo,
+   flaring in sequence. The render's own city lights are static and baked in;
+   these are the ones that are alive.
+   ------------------------------------------------------------------------- */
+
+.corridor {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* ---- timing ---------------------------------------------------------------
+   One 4.5s cycle shared by all three lights, split into three 1.5s slots. Each
+   light is only visible inside its own slot and sits at zero opacity for the
+   other two thirds, so Beirut fades out before Jounieh starts and Jounieh before
+   Jbeil. The chain runs up the coast, then repeats.
+
+   Change --cycle and the delays below follow, because the delay is set inline as
+   index × (cycle ÷ 3).
+   --------------------------------------------------------------------------- */
+
+.light,
+.lightMajor {
+  position: absolute;
+  border-radius: 50%;
+  background: var(--ember-2);
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  animation: flare 4.5s ease-in-out infinite;
+}
+
+.light {
+  width: 9px;
+  height: 9px;
+  background: #fff3d6;
+  box-shadow:
+    0 0 8px 3px var(--ember-2),
+    0 0 20px 8px color-mix(in srgb, var(--ember) 65%, transparent),
+    0 0 36px 16px color-mix(in srgb, var(--ember) 28%, transparent);
+}
+
+.lightMajor {
+  width: 13px;
+  height: 13px;
+  background: #fff8e7;
+  box-shadow:
+    0 0 10px 4px var(--ember-2),
+    0 0 26px 11px color-mix(in srgb, var(--ember) 70%, transparent),
+    0 0 48px 22px color-mix(in srgb, var(--ember) 32%, transparent);
+}
+
+/* A wide travelling ring, so the beacon is obvious even at a glance. */
+.light::after,
+.lightMajor::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 1.5px solid var(--ember-2);
+  opacity: 0;
+  animation: ripple 4.5s ease-out infinite;
+  animation-delay: inherit;
+}
+
+/* Visible from 0% to 30% of the cycle — 1.35s of a 1.5s slot, so there is a
+   beat of darkness before the next light picks up. */
+@keyframes flare {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.5);
+  }
+  7% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.35);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+  30%,
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.5);
+  }
+}
+
+@keyframes ripple {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  7% {
+    opacity: 0.9;
+    transform: scale(0.85);
+  }
+  30%,
+  100% {
+    opacity: 0;
+    transform: scale(2.8);
+  }
+}
+
+.caption {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--ink-2);
+  text-align: center;
+  max-width: 34ch;
+  line-height: 1.5;
+}
+
+.dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ember-2);
+  box-shadow: 0 0 8px 1px color-mix(in srgb, var(--ember) 70%, transparent);
+  animation: blink 4.5s ease-in-out infinite;
+}
+
+/* One pulse per cycle, in step with the first light on the map. */
+@keyframes blink {
+  0%,
+  30%,
+  100% {
+    opacity: 0.45;
+  }
+  10% {
+    opacity: 1;
+  }
+}
+
+/*
+  A map that breathes is decoration; a map that breathes at someone who asked it
+  not to is a bug. The lights hold at full strength so nothing is lost — the
+  corridor still reads as the lit part.
+*/
+@media (prefers-reduced-motion: reduce) {
+  .light,
+  .lightMajor,
+  .dot {
+    animation: none;
+    opacity: 1;
+  }
+
+  .light,
+  .lightMajor {
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  /* The ring only means anything while it travels. */
+  .light::after,
+  .lightMajor::after {
+    display: none;
+  }
+}

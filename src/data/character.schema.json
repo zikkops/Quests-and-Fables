@@ -1,0 +1,149 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/schemas/character.schema.json",
+  "title": "Character Document",
+  "description": "Ruleset-agnostic character document. Stores CHOICES, not computed results — derived values are recomputed from the ruleset at load time so that a ruleset fix repairs every existing character automatically.",
+  "type": "object",
+  "required": ["schemaVersion", "rulesetId", "rulesetVersion", "name", "choices"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {
+      "type": "integer",
+      "const": 1,
+      "description": "Version of THIS document format, not the ruleset."
+    },
+    "rulesetId": {
+      "type": "string",
+      "examples": ["srd-5.2.1", "pf2e-remaster", "homebrew:a1b2c3"]
+    },
+    "rulesetVersion": {
+      "type": "string",
+      "description": "Pinned. Never migrate a character to a new ruleset version implicitly."
+    },
+    "name": { "type": "string", "minLength": 1, "maxLength": 120 },
+    "level": { "type": "integer", "minimum": 1, "maximum": 20 },
+    "portraitUrl": { "type": ["string", "null"], "format": "uri" },
+
+    "choices": {
+      "type": "object",
+      "description": "Keyed by step id from the ruleset. The shape of each value depends on the step type.",
+      "additionalProperties": true,
+      "examples": [
+        {
+          "species": { "key": "dwarf", "subchoices": { "toolProficiency": "smiths-tools" } },
+          "class": { "key": "fighter" },
+          "subclass": { "key": "champion" },
+          "background": { "key": "soldier" },
+          "abilities": {
+            "method": "standard-array",
+            "assignment": { "str": 15, "dex": 13, "con": 14, "int": 8, "wis": 12, "cha": 10 }
+          },
+          "skills": ["athletics", "intimidation"],
+          "equipment": { "packageKey": "fighter-a", "branches": { "weapon": "longsword" } },
+          "spells": []
+        }
+      ]
+    },
+
+    "overrides": {
+      "type": "object",
+      "description": "Manual player edits that intentionally deviate from the ruleset (house rules). Always surfaced in the UI as 'edited' so nothing is silently wrong.",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["value"],
+        "properties": {
+          "value": {},
+          "reason": { "type": "string" }
+        }
+      },
+      "examples": [{ "maxHitPoints": { "value": 34, "reason": "DM house rule: max HP at level 1" } }]
+    },
+
+    "resources": {
+      "type": "object",
+      "description": "Mutable in-play state. Separate from build choices so 'reset for a new session' is trivial.",
+      "properties": {
+        "currentHitPoints": { "type": "integer" },
+        "temporaryHitPoints": { "type": "integer", "minimum": 0 },
+        "hitDiceRemaining": { "type": "integer", "minimum": 0 },
+        "spellSlotsUsed": {
+          "type": "object",
+          "additionalProperties": { "type": "integer", "minimum": 0 }
+        },
+        "conditions": { "type": "array", "items": { "type": "string" } },
+        "deathSaves": {
+          "type": "object",
+          "properties": {
+            "successes": { "type": "integer", "minimum": 0, "maximum": 3 },
+            "failures": { "type": "integer", "minimum": 0, "maximum": 3 }
+          }
+        },
+        "customCounters": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["label", "current", "max"],
+            "properties": {
+              "label": { "type": "string" },
+              "current": { "type": "integer" },
+              "max": { "type": "integer" },
+              "resetsOn": { "type": "string", "enum": ["short-rest", "long-rest", "dawn", "never"] }
+            }
+          }
+        }
+      }
+    },
+
+    "inventory": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "quantity"],
+        "properties": {
+          "contentKey": { "type": ["string", "null"], "description": "Links to content_items when it is a known item; null for freeform." },
+          "name": { "type": "string" },
+          "quantity": { "type": "integer", "minimum": 0 },
+          "equipped": { "type": "boolean" },
+          "attuned": { "type": "boolean" },
+          "notes": { "type": "string" }
+        }
+      }
+    },
+
+    "currency": {
+      "type": "object",
+      "additionalProperties": { "type": "integer", "minimum": 0 },
+      "examples": [{ "cp": 0, "sp": 0, "ep": 0, "gp": 15, "pp": 0 }]
+    },
+
+    "roleplay": {
+      "type": "object",
+      "description": "The part players actually care about. Never gate this behind a paywall.",
+      "properties": {
+        "pronouns": { "type": "string" },
+        "age": { "type": "string" },
+        "appearance": { "type": "string" },
+        "personality": { "type": "string" },
+        "ideals": { "type": "string" },
+        "bonds": { "type": "string" },
+        "flaws": { "type": "string" },
+        "backstory": { "type": "string" },
+        "notes": { "type": "string" }
+      }
+    },
+
+    "meta": {
+      "type": "object",
+      "properties": {
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "tableId": { "type": ["string", "null"] },
+        "isPublic": { "type": "boolean", "default": false },
+        "quickBuildArchetype": {
+          "type": ["string", "null"],
+          "enum": ["tank", "damage", "sneaky", "magic", "support", "healer", null]
+        }
+      }
+    }
+  }
+}

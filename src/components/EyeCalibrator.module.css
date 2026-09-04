@@ -1,0 +1,108 @@
+.ruler {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+.ellipse {
+  position: absolute;
+  left: calc(var(--iris-cx) - var(--iris-rx));
+  top: calc(var(--iris-cy) - var(--iris-ry));
+  width: calc(var(--iris-rx) * 2);
+  height: calc(var(--iris-ry) * 2);
+  border: 1px solid #37ff9a;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6);
+}
+
+.crossV,
+.crossH {
+  position: absolute;
+  background: #37ff9a;
+}
+
+.crossV {
+  left: var(--iris-cx);
+  top: 0;
+  bottom: 0;
+  width: 1px;
+}
+
+.crossH {
+  top: var(--iris-cy);
+  left: 0;
+  right: 0;
+  height: 1px;
+}
+
+/* The travel box: how far the iris may actually move. If the ellipse plus this
+   box runs off the eyeball in the photo, the gaze range is too wide. */
+.range {
+  position: absolute;
+  left: calc(var(--iris-cx) - var(--gaze-range-x));
+  top: calc(var(--iris-cy) - var(--gaze-range-y));
+  width: calc(var(--gaze-range-x) * 2);
+  height: calc(var(--gaze-range-y) * 2);
+  border: 1px dashed rgba(255, 122, 89, 0.9);
+}
+
+.panel {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  pointer-events: auto;
+  display: grid;
+  gap: 6px;
+  padding: 10px 12px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #d8ffe9;
+  background: rgba(6, 10, 8, 0.94);
+  border: 1px solid #1f5c3f;
+  border-radius: 8px;
+}
+
+.row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.mode {
+  padding: 2px 7px;
+  border: 1px solid #1f5c3f;
+  border-radius: 999px;
+  background: transparent;
+  color: #7fdcae;
+  cursor: pointer;
+}
+
+.modeOn {
+  background: #37ff9a;
+  border-color: #37ff9a;
+  color: #04150c;
+}
+
+.values {
+  margin: 0;
+  white-space: pre-wrap;
+  color: #9ff5c6;
+}
+
+.hint {
+  color: #5f9b7d;
+}
+
+.copy {
+  justify-self: start;
+  padding: 3px 9px;
+  border: 1px solid #37ff9a;
+  border-radius: 6px;
+  background: transparent;
+  color: #37ff9a;
+  cursor: pointer;
+}

@@ -1,0 +1,400 @@
+/*
+   One screen, and everything in it.
+
+   The hero used to be as tall as its own content, a fixed 841px, so on any
+   laptop shorter than that it pushed its own last line and the scroll cue off
+   the bottom. It is now bound to the viewport and the copy gives way instead:
+   the padding, the gaps and the title all scale with vh, so the same block of
+   text sits in 640px or in 1000px without reflowing into something else.
+
+   svh, not vh: on a phone vh is the height with the browser toolbar hidden, so
+   100vh is taller than what you can actually see when the page loads.
+*/
+.hero {
+  position: relative;
+  isolation: isolate;
+  min-height: calc(100svh - var(--nav-h));
+  display: grid;
+  align-content: center;
+}
+
+.inner {
+  position: relative;
+  z-index: 1;
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: clamp(20px, 3.4vh, 46px) 28px clamp(52px, 8vh, 96px);
+  display: grid;
+  /* The right column is deliberately empty. It reserves room for the eye
+     without constraining it, since the eye is not in this grid at all. */
+  grid-template-columns: minmax(0, 1.02fr) minmax(0, 0.98fr);
+  gap: 64px;
+  align-items: center;
+}
+
+.copy {
+  display: grid;
+  gap: clamp(14px, 2.4vh, 26px);
+  align-content: center;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 11.5px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.pulse {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ember);
+  box-shadow: 0 0 0 0 rgba(226, 112, 58, 0.55);
+  animation: pulse 2.6s var(--ease-out) infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(226, 112, 58, 0.5);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(226, 112, 58, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(226, 112, 58, 0);
+  }
+}
+
+.title {
+  /* Bound by the height as well as the width, or a short wide window gets a
+     headline four lines deep and nothing else. */
+  font-size: clamp(2.1rem, min(5.4vw, 7vh), 4.15rem);
+  max-width: 15ch;
+}
+
+.titleEmber {
+  display: block;
+  color: var(--ember);
+}
+
+.lede {
+  font-size: clamp(1rem, 1.15vw, 1.12rem);
+  color: var(--ink-2);
+  max-width: 46ch;
+}
+
+.lede strong {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+/* --- The role fork ------------------------------------------------------- */
+
+.fork {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: 4px;
+}
+
+.card {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  gap: 5px;
+  padding: 20px 20px 18px;
+  text-align: left;
+  cursor: pointer;
+  /*
+     Glass, so the dragon shows through. The right card sits over the eye and
+     the left one over the dark, which is why the tint is a gradient rather than
+     a flat wash: it has to hold the label legible over an orange iris and still
+     look like something over near black.
+  */
+  background: linear-gradient(
+    160deg,
+    rgba(35, 32, 25, 0.26),
+    rgba(18, 16, 15, 0.4)
+  );
+  backdrop-filter: blur(14px) saturate(130%);
+  border: 1px solid rgba(201, 162, 39, 0.18);
+  border-radius: var(--r);
+  box-shadow:
+    inset 0 1px 0 rgba(240, 233, 223, 0.07),
+    0 10px 30px rgba(0, 0, 0, 0.35);
+  transition:
+    border-color 200ms var(--ease-out),
+    transform 200ms var(--ease-out),
+    background 200ms var(--ease-out);
+}
+
+/* Safari before 18 and anything without backdrop-filter gets the old solid
+   card rather than a transparent one with unreadable text on it. */
+@supports not (backdrop-filter: blur(2px)) {
+  .card {
+    background: var(--bg-2);
+  }
+}
+
+.card:hover {
+  border-color: rgba(201, 162, 39, 0.55);
+  background: linear-gradient(
+    160deg,
+    rgba(45, 40, 31, 0.62),
+    rgba(24, 21, 18, 0.7)
+  );
+  transform: translateY(-2px);
+}
+
+/* A radial glow that tracks the cursor inside the card. --mx/--my are written
+   by Hero.tsx on pointer move. */
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(
+    220px circle at var(--mx, 50%) var(--my, 50%),
+    rgba(201, 162, 39, 0.16),
+    transparent 65%
+  );
+  transition: opacity 220ms var(--ease-out);
+}
+
+.card:hover::before,
+.card:focus-visible::before {
+  opacity: 1;
+}
+
+/* --- The game master invitation ------------------------------------------ */
+
+/*
+   Deliberately not a card. It sits in the same row so the two are read
+   together, but it has no fill, no border on three sides and no button: a
+   player is being asked to start something, a game master is being asked to
+   write to us.
+*/
+.recruit {
+  display: grid;
+  align-content: center;
+  gap: 6px;
+  padding: 4px 0 4px 20px;
+  border-left: 1px solid var(--line);
+}
+
+.recruitTitle {
+  font-family: var(--font-display);
+  font-size: 1.02rem;
+  color: var(--ink-2);
+}
+
+.recruitBody {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ink-3);
+}
+
+.recruitLink {
+  justify-self: start;
+  margin-top: 2px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--accent);
+  border-bottom: 1px solid rgba(201, 162, 39, 0.35);
+  transition: color 160ms var(--ease-out), border-color 160ms var(--ease-out);
+}
+
+.recruitLink:hover {
+  color: var(--accent-2);
+  border-bottom-color: var(--accent-2);
+}
+
+.cardLabel {
+  font-family: var(--font-display);
+  font-size: 1.16rem;
+  color: var(--ink);
+}
+
+.cardBody {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--ink-3);
+}
+
+.cardArrow {
+  margin-top: 6px;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  opacity: 0;
+  transform: translateX(-4px);
+  transition:
+    opacity 200ms var(--ease-out),
+    transform 200ms var(--ease-out);
+}
+
+.card:hover .cardArrow,
+.card:focus-visible .cardArrow {
+  opacity: 1;
+  transform: none;
+}
+
+/* The GM promise, on the homepage on purpose: GMs are the scarce side. */
+.promise {
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+.promise strong {
+  color: var(--ink-2);
+  font-weight: 500;
+}
+
+/* --- Right column -------------------------------------------------------- */
+
+/*
+  Anchored to the right edge of the viewport rather than to the content column,
+  so it takes whatever space is spare and runs off the side of the page. It sits
+  behind the copy and never intercepts clicks. The feathering that makes it meld
+  into the background is on the photo itself, in DragonEye.module.css.
+*/
+.eye {
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(66vw, 1040px);
+  pointer-events: none;
+}
+
+.cue {
+  position: absolute;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  font-size: 10.5px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.cueLine {
+  width: 1px;
+  height: 34px;
+  background: linear-gradient(var(--line-2), transparent);
+}
+
+/*
+   A short window, which is most laptops once the browser has taken its share.
+   Everything gives a little at once rather than one thing giving a lot: the
+   padding, the gaps, the headline and the cards. The alternative is the role
+   fork and the promise under it sitting below the fold on the one screen that
+   is supposed to ask the only question this page asks.
+*/
+@media (max-height: 800px) {
+  .inner {
+    padding-top: 14px;
+    padding-bottom: 26px;
+  }
+
+  .copy {
+    gap: 12px;
+  }
+
+  .title {
+    font-size: clamp(1.95rem, 4.8vh, 2.9rem);
+  }
+
+  .lede {
+    font-size: 0.98rem;
+  }
+
+  .card {
+    padding: 14px 16px 13px;
+  }
+
+  .promise {
+    font-size: 12.5px;
+  }
+}
+
+/* A phone is a short window too, and it has the eye stacked above the copy
+   rather than beside it, so it gives up the most. */
+@media (max-width: 940px) {
+  .inner {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 22px;
+    padding-bottom: 36px;
+    min-height: 0;
+  }
+
+  .copy {
+    gap: 12px;
+  }
+
+  .eye {
+    position: relative;
+    width: 100%;
+    /* Wider and shallower than on desktop: the eye is landscape either way, and
+       on a phone every 50px it gives back is a line of the fork. */
+    aspect-ratio: 21 / 9;
+    margin-bottom: -6%;
+  }
+
+  .title {
+    font-size: clamp(1.95rem, 7.4vw, 2.6rem);
+    max-width: 20ch;
+  }
+
+  .lede {
+    font-size: 0.98rem;
+  }
+
+  .card {
+    padding: 14px 16px 13px;
+  }
+
+  .promise {
+    font-size: 12.5px;
+  }
+
+  /* Hover only, so on a touch screen it never appears and only ever cost a
+     line of height. */
+  .cardArrow {
+    display: none;
+  }
+
+  .cue {
+    display: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .inner {
+    padding: 18px 20px 32px;
+    gap: 18px;
+  }
+
+  .copy {
+    gap: 10px;
+  }
+
+  .eye {
+    aspect-ratio: 26 / 10;
+  }
+
+  .fork {
+    grid-template-columns: 1fr;
+  }
+}

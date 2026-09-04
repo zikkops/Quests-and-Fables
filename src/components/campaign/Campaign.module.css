@@ -1,0 +1,153 @@
+/* ---------------------------------------------------------------------------
+   A real party's table: the sheets brought to it, and its notebook.
+   --------------------------------------------------------------------------- */
+
+.wrap {
+  display: grid;
+  gap: 26px;
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.name {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  color: var(--ink);
+}
+
+.role {
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent-2);
+}
+
+.block {
+  display: grid;
+  gap: 14px;
+}
+
+.blockHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.blockTitle {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  color: var(--ink);
+}
+
+.quiet {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ink-3);
+  max-width: 70ch;
+}
+
+.quiet strong {
+  color: var(--ink-2);
+  font-weight: 500;
+}
+
+.plain {
+  font-size: 14.5px;
+  line-height: 1.62;
+  color: var(--ink-2);
+  max-width: 70ch;
+}
+
+.error {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--err);
+  border-left: 2px solid var(--err);
+  padding-left: 10px;
+}
+
+/* Dashed, like every "beside the argument" box on this site: your own sheet is
+   a thing you hand over rather than part of the table until you do. */
+.bring {
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+  padding: 15px 17px 16px;
+  border: 1px dashed var(--line-2);
+  border-radius: var(--r);
+  background: rgba(26, 23, 21, 0.5);
+}
+
+.bringRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.gate {
+  display: grid;
+  gap: 12px;
+  justify-items: start;
+  padding: 26px 26px 28px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+}
+
+.gateTitle {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  color: var(--ink);
+}
+
+.primary,
+.secondary {
+  font-size: 13.5px;
+  font-weight: 600;
+  border-radius: var(--r);
+  padding: 10px 18px;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background 160ms var(--ease-out),
+    border-color 160ms var(--ease-out),
+    color 160ms var(--ease-out);
+}
+
+.primary {
+  color: var(--accent-ink);
+  background: var(--accent);
+  border: 1px solid transparent;
+}
+
+.primary:hover:not(:disabled) {
+  background: var(--accent-2);
+}
+
+.primary:disabled {
+  color: var(--ink-3);
+  background: var(--bg-3);
+  cursor: default;
+}
+
+.secondary {
+  color: var(--ink);
+  background: transparent;
+  border: 1px solid var(--line-2);
+}
+
+.secondary:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.secondary:disabled {
+  color: var(--ink-3);
+  cursor: default;
+}

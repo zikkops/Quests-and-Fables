@@ -1,0 +1,116 @@
+.frame {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+/*
+  The stage carries the photo's own aspect ratio, which is what makes the
+  calibration percentages stable. If the photo were stretched to fill a
+  container of changing shape, the iris would sit somewhere different at every
+  viewport width and no fixed percentage could describe it.
+
+  It is full width and vertically centred. Any shortfall top and bottom is
+  invisible, because the mask fades those edges to nothing anyway.
+*/
+.stage {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  aspect-ratio: var(--eye-aspect);
+
+  /*
+    Feathering the left, top and bottom edges to nothing, so there is no
+    rectangle anywhere on the page. Only the right edge stays hard, and that
+    runs off the viewport where it is never seen.
+  */
+  mask-image:
+    linear-gradient(to right, transparent 0%, rgba(0, 0, 0, 0.55) 26%, #000 58%),
+    linear-gradient(to bottom, transparent 0%, #000 16%, #000 80%, transparent 100%);
+  mask-composite: intersect;
+  -webkit-mask-image:
+    linear-gradient(to right, transparent 0%, rgba(0, 0, 0, 0.55) 26%, #000 58%),
+    linear-gradient(to bottom, transparent 0%, #000 16%, #000 80%, transparent 100%);
+  -webkit-mask-composite: source-in;
+
+  /*
+    A dark subject on near-black, over a near-black page. Screen drops the
+    blacks into the background entirely and keeps the scales and the lit iris,
+    which is what makes it meld instead of sitting in a visible box. It is also
+    what lets the lids below work.
+  */
+  mix-blend-mode: screen;
+}
+
+/* Applies to both the <video> and the reduced-motion <img>. */
+.photo {
+  position: absolute;
+  display: block;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: var(--eye-img-x) var(--eye-img-y);
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* Warms the iris side and keeps the far corners sitting down in the dark. */
+.vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    46% 52% at var(--iris-cx) var(--iris-cy),
+    rgba(226, 112, 58, 0.1) 0%,
+    transparent 62%
+  );
+}
+
+/* ---------------------------------------------------------------------------
+   Placeholder, shown only when the photo is missing from public/assets.
+   --------------------------------------------------------------------------- */
+.placeholder {
+  position: absolute;
+  inset: 12% 8%;
+  display: grid;
+  place-content: center;
+  gap: 10px;
+  padding: 32px;
+  text-align: center;
+  border: 1px dashed var(--line-2);
+  border-radius: var(--r-lg);
+  background-color: var(--bg-2);
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(201, 162, 39, 0.05) 0 10px,
+    transparent 10px 20px
+  );
+}
+
+.placeholderTitle {
+  font-family: var(--font-display);
+  font-size: 15px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.placeholderBody {
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--ink-2);
+  max-width: 34ch;
+  margin: 0 auto;
+}
+
+.placeholderBody code {
+  font-size: 12.5px;
+  color: var(--ink);
+  background: var(--bg-3);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 1px 5px;
+}

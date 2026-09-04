@@ -1,0 +1,2114 @@
+{
+  "_meta": {
+    "rulesetId": "srd-5.2.1",
+    "name": "5e SRD",
+    "version": "5.2.1",
+    "publisher": "Wizards of the Coast LLC",
+    "license": "CC-BY-4.0",
+    "sourceUrl": "https://www.dndbeyond.com/srd",
+    "attribution": "This work includes material from the System Reference Document 5.2.1 (\"SRD 5.2.1\") by Wizards of the Coast LLC, available at https://www.dndbeyond.com/srd. The SRD 5.2.1 is licensed under the Creative Commons Attribution 4.0 International License, available at https://creativecommons.org/licenses/by/4.0/legalcode.",
+    "coverage": {
+      "classes": "12 of 12 — complete",
+      "subclasses": "12 of 48 — the SRD includes exactly one subclass per class",
+      "species": "9 of 10 — Aasimar is not in the SRD",
+      "backgrounds": "4 of 16 — Acolyte, Criminal, Sage, Soldier",
+      "feats": "17 of ~75 — see docs/03-legal.md"
+    },
+    "notes": "Every row below carries source + license so takedown provenance is answerable in one query. Seed ONLY from the SRD PDF — never from wikis, D&D Beyond, or scraped datasets, which mix in non-SRD content."
+  },
+  "abilities": [
+    {
+      "key": "str",
+      "name": "Strength",
+      "blurb": "Lifting, hitting hard, kicking down doors."
+    },
+    {
+      "key": "dex",
+      "name": "Dexterity",
+      "blurb": "Aim, reflexes, sneaking, staying out of the way."
+    },
+    {
+      "key": "con",
+      "name": "Constitution",
+      "blurb": "Stamina, and how much punishment you can take."
+    },
+    {
+      "key": "int",
+      "name": "Intelligence",
+      "blurb": "Knowledge, reasoning, remembering things."
+    },
+    {
+      "key": "wis",
+      "name": "Wisdom",
+      "blurb": "Perception, intuition, reading a room."
+    },
+    {
+      "key": "cha",
+      "name": "Charisma",
+      "blurb": "Force of personality. Talking your way out of it."
+    }
+  ],
+  "skills": [
+    {
+      "key": "acrobatics",
+      "name": "Acrobatics",
+      "ability": "dex"
+    },
+    {
+      "key": "animal-handling",
+      "name": "Animal Handling",
+      "ability": "wis"
+    },
+    {
+      "key": "arcana",
+      "name": "Arcana",
+      "ability": "int"
+    },
+    {
+      "key": "athletics",
+      "name": "Athletics",
+      "ability": "str"
+    },
+    {
+      "key": "deception",
+      "name": "Deception",
+      "ability": "cha"
+    },
+    {
+      "key": "history",
+      "name": "History",
+      "ability": "int"
+    },
+    {
+      "key": "insight",
+      "name": "Insight",
+      "ability": "wis"
+    },
+    {
+      "key": "intimidation",
+      "name": "Intimidation",
+      "ability": "cha"
+    },
+    {
+      "key": "investigation",
+      "name": "Investigation",
+      "ability": "int"
+    },
+    {
+      "key": "medicine",
+      "name": "Medicine",
+      "ability": "wis"
+    },
+    {
+      "key": "nature",
+      "name": "Nature",
+      "ability": "int"
+    },
+    {
+      "key": "perception",
+      "name": "Perception",
+      "ability": "wis"
+    },
+    {
+      "key": "performance",
+      "name": "Performance",
+      "ability": "cha"
+    },
+    {
+      "key": "persuasion",
+      "name": "Persuasion",
+      "ability": "cha"
+    },
+    {
+      "key": "religion",
+      "name": "Religion",
+      "ability": "int"
+    },
+    {
+      "key": "sleight-of-hand",
+      "name": "Sleight of Hand",
+      "ability": "dex"
+    },
+    {
+      "key": "stealth",
+      "name": "Stealth",
+      "ability": "dex"
+    },
+    {
+      "key": "survival",
+      "name": "Survival",
+      "ability": "wis"
+    }
+  ],
+  "species": [
+    {
+      "key": "dragonborn",
+      "name": "Dragonborn",
+      "size": "Medium",
+      "speed": 30,
+      "blurb": "Descended from dragons. You breathe elemental death and grow wings.",
+      "meta": "Breath weapon, damage resistance, flight at level 5",
+      "traits": [
+        "Darkvision 60 ft.",
+        "Breath Weapon",
+        "Damage Resistance",
+        "Draconic Flight (lvl 5)"
+      ],
+      "hasLineage": true,
+      "lineageLabel": "Draconic Ancestry",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "dwarf",
+      "name": "Dwarf",
+      "size": "Medium",
+      "speed": 30,
+      "blurb": "Sturdy, stubborn, and at home in stone. The toughest species in the book.",
+      "meta": "+1 HP per level, poison resistance, 120 ft darkvision",
+      "traits": [
+        "Darkvision 120 ft.",
+        "Dwarven Resilience",
+        "Dwarven Toughness",
+        "Stonecunning"
+      ],
+      "hasLineage": false,
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "elf",
+      "name": "Elf",
+      "size": "Medium",
+      "speed": 30,
+      "blurb": "Long-lived, keen-eyed, and hard to charm. Three quite different lineages.",
+      "meta": "Free skill, charm resistance, no sleep needed",
+      "traits": [
+        "Darkvision 60 ft.",
+        "Fey Ancestry",
+        "Keen Senses",
+        "Trance"
+      ],
+      "hasLineage": true,
+      "lineageLabel": "Elven Lineage",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "gnome",
+      "name": "Gnome",
+      "size": "Small",
+      "speed": 30,
+      "blurb": "Curious, inventive, quick-minded. The best mental saves in the game.",
+      "meta": "Advantage on all INT, WIS and CHA saves",
+      "traits": [
+        "Darkvision 60 ft.",
+        "Gnomish Cunning"
+      ],
+      "hasLineage": true,
+      "lineageLabel": "Gnomish Lineage",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "goliath",
+      "name": "Goliath",
+      "size": "Medium",
+      "speed": 35,
+      "blurb": "Giant-blooded, towering, and faster than everyone else.",
+      "meta": "35 ft speed, carry as if Large, a giant power",
+      "traits": [
+        "Giant Ancestry",
+        "Large Form (lvl 5)",
+        "Powerful Build"
+      ],
+      "hasLineage": true,
+      "lineageLabel": "Giant Ancestry",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "halfling",
+      "name": "Halfling",
+      "size": "Small",
+      "speed": 30,
+      "blurb": "Small, lucky, and braver than they look. Reroll your 1s.",
+      "meta": "Luck, fear immunity-ish, hide behind bigger creatures",
+      "traits": [
+        "Brave",
+        "Halfling Nimbleness",
+        "Luck",
+        "Naturally Stealthy"
+      ],
+      "hasLineage": false,
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "human",
+      "name": "Human",
+      "size": "Medium",
+      "speed": 30,
+      "blurb": "Adaptable and everywhere. Mechanically the most flexible starting point.",
+      "meta": "A free Origin feat, a free skill, and Heroic Inspiration daily",
+      "traits": [
+        "Resourceful",
+        "Skillful",
+        "Versatile"
+      ],
+      "hasLineage": false,
+      "grantsExtraOriginFeat": true,
+      "grantsExtraSkill": true,
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "orc",
+      "name": "Orc",
+      "size": "Medium",
+      "speed": 30,
+      "blurb": "Powerful and relentless. Very hard to actually put down.",
+      "meta": "Drop to 1 HP instead of 0, once per long rest",
+      "traits": [
+        "Adrenaline Rush",
+        "Darkvision 120 ft.",
+        "Relentless Endurance"
+      ],
+      "hasLineage": false,
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "tiefling",
+      "name": "Tiefling",
+      "size": "Medium",
+      "speed": 30,
+      "blurb": "Touched by the lower planes. Innate spellcasting from your legacy.",
+      "meta": "Free spells that scale with level, plus Thaumaturgy",
+      "traits": [
+        "Darkvision 60 ft.",
+        "Fiendish Legacy",
+        "Otherworldly Presence"
+      ],
+      "hasLineage": true,
+      "lineageLabel": "Fiendish Legacy",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    }
+  ],
+  "lineages": [
+    {
+      "key": "anc-black",
+      "speciesKey": "dragonborn",
+      "name": "Black Dragon",
+      "blurb": "Acid damage. Line-shaped breath.",
+      "meta": "Acid"
+    },
+    {
+      "key": "anc-blue",
+      "speciesKey": "dragonborn",
+      "name": "Blue Dragon",
+      "blurb": "Lightning damage. Line-shaped breath.",
+      "meta": "Lightning"
+    },
+    {
+      "key": "anc-brass",
+      "speciesKey": "dragonborn",
+      "name": "Brass Dragon",
+      "blurb": "Fire damage. Line-shaped breath.",
+      "meta": "Fire"
+    },
+    {
+      "key": "anc-bronze",
+      "speciesKey": "dragonborn",
+      "name": "Bronze Dragon",
+      "blurb": "Lightning damage. Line-shaped breath.",
+      "meta": "Lightning"
+    },
+    {
+      "key": "anc-copper",
+      "speciesKey": "dragonborn",
+      "name": "Copper Dragon",
+      "blurb": "Acid damage. Line-shaped breath.",
+      "meta": "Acid"
+    },
+    {
+      "key": "anc-gold",
+      "speciesKey": "dragonborn",
+      "name": "Gold Dragon",
+      "blurb": "Fire damage. Cone-shaped breath.",
+      "meta": "Fire"
+    },
+    {
+      "key": "anc-green",
+      "speciesKey": "dragonborn",
+      "name": "Green Dragon",
+      "blurb": "Poison damage. Cone-shaped breath.",
+      "meta": "Poison"
+    },
+    {
+      "key": "anc-red",
+      "speciesKey": "dragonborn",
+      "name": "Red Dragon",
+      "blurb": "Fire damage. Cone-shaped breath.",
+      "meta": "Fire"
+    },
+    {
+      "key": "anc-silver",
+      "speciesKey": "dragonborn",
+      "name": "Silver Dragon",
+      "blurb": "Cold damage. Cone-shaped breath.",
+      "meta": "Cold"
+    },
+    {
+      "key": "anc-white",
+      "speciesKey": "dragonborn",
+      "name": "White Dragon",
+      "blurb": "Cold damage. Cone-shaped breath.",
+      "meta": "Cold"
+    },
+    {
+      "key": "elf-drow",
+      "speciesKey": "elf",
+      "name": "Drow",
+      "blurb": "Underdark elves. Superior darkvision and innate spells.",
+      "meta": "Darkvision 120 ft. · Dancing Lights"
+    },
+    {
+      "key": "elf-high",
+      "speciesKey": "elf",
+      "name": "High Elf",
+      "blurb": "Scholarly elves. A wizard cantrip you can swap on a long rest.",
+      "meta": "Prestidigitation + swap"
+    },
+    {
+      "key": "elf-wood",
+      "speciesKey": "elf",
+      "name": "Wood Elf",
+      "blurb": "Fast and stealthy. 35 ft speed and Druidcraft.",
+      "meta": "Speed 35 ft. · Druidcraft"
+    },
+    {
+      "key": "gnome-forest",
+      "speciesKey": "gnome",
+      "name": "Forest Gnome",
+      "blurb": "Minor Illusion and you can talk to small animals.",
+      "meta": "Minor Illusion · Speak with Animals"
+    },
+    {
+      "key": "gnome-rock",
+      "speciesKey": "gnome",
+      "name": "Rock Gnome",
+      "blurb": "Tinker. Build tiny clockwork devices.",
+      "meta": "Mending · Prestidigitation · Tinker"
+    },
+    {
+      "key": "giant-cloud",
+      "speciesKey": "goliath",
+      "name": "Cloud's Jaunt",
+      "blurb": "Bonus-action teleport 30 ft.",
+      "meta": "Teleport"
+    },
+    {
+      "key": "giant-fire",
+      "speciesKey": "goliath",
+      "name": "Fire's Burn",
+      "blurb": "Extra fire damage when you hit.",
+      "meta": "Fire damage"
+    },
+    {
+      "key": "giant-frost",
+      "speciesKey": "goliath",
+      "name": "Frost's Chill",
+      "blurb": "Cold damage and slow the target.",
+      "meta": "Cold + slow"
+    },
+    {
+      "key": "giant-hill",
+      "speciesKey": "goliath",
+      "name": "Hill's Tumble",
+      "blurb": "Knock a Large-or-smaller target prone.",
+      "meta": "Prone"
+    },
+    {
+      "key": "giant-stone",
+      "speciesKey": "goliath",
+      "name": "Stone's Endurance",
+      "blurb": "Reaction: reduce damage taken.",
+      "meta": "Damage reduction"
+    },
+    {
+      "key": "giant-storm",
+      "speciesKey": "goliath",
+      "name": "Storm's Thunder",
+      "blurb": "Reaction: thunder damage to your attacker.",
+      "meta": "Thunder damage"
+    },
+    {
+      "key": "fiend-abyssal",
+      "speciesKey": "tiefling",
+      "name": "Abyssal Legacy",
+      "blurb": "Poison resistance. Poison Spray, Ray of Sickness, Hold Person.",
+      "meta": "Poison resistance"
+    },
+    {
+      "key": "fiend-chthonic",
+      "speciesKey": "tiefling",
+      "name": "Chthonic Legacy",
+      "blurb": "Necrotic resistance. Chill Touch, False Life, Ray of Enfeeblement.",
+      "meta": "Necrotic resistance"
+    },
+    {
+      "key": "fiend-infernal",
+      "speciesKey": "tiefling",
+      "name": "Infernal Legacy",
+      "blurb": "Fire resistance. Fire Bolt, Hellish Rebuke, Darkness.",
+      "meta": "Fire resistance"
+    }
+  ],
+  "classes": [
+    {
+      "key": "barbarian",
+      "name": "Barbarian",
+      "hitDie": 12,
+      "primary": [
+        "str"
+      ],
+      "saves": [
+        "str",
+        "con"
+      ],
+      "blurb": "Rage, resistance to damage, and the highest hit points in the game.",
+      "meta": "The simplest class to play and one of the most fun. Charge in first.",
+      "armor": "Light and medium armour, shields",
+      "weapons": "Simple and martial weapons",
+      "skillCount": 2,
+      "skillChoices": [
+        "animal-handling",
+        "athletics",
+        "intimidation",
+        "nature",
+        "perception",
+        "survival"
+      ],
+      "subclassLevel": 3,
+      "isSpellcaster": false,
+      "fightingStyle": false,
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "bard",
+      "name": "Bard",
+      "hitDie": 8,
+      "primary": [
+        "cha"
+      ],
+      "saves": [
+        "dex",
+        "cha"
+      ],
+      "blurb": "Magic, skills, and making everyone else better at their job.",
+      "meta": "Support class that is never boring. Can pick any three skills.",
+      "armor": "Light armour",
+      "weapons": "Simple weapons",
+      "skillCount": 3,
+      "skillChoices": "any",
+      "subclassLevel": 3,
+      "isSpellcaster": true,
+      "spellcastingAbility": "cha",
+      "spellList": "bard",
+      "cantripsKnown": 2,
+      "spellsKnown": 4,
+      "preparedCaster": false,
+      "fightingStyle": false,
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "cleric",
+      "name": "Cleric",
+      "hitDie": 8,
+      "primary": [
+        "wis"
+      ],
+      "saves": [
+        "wis",
+        "cha"
+      ],
+      "blurb": "Divine magic, healing, and surprisingly decent armour.",
+      "meta": "Always in demand, tougher than people expect. Never a wasted turn.",
+      "armor": "Light and medium armour, shields",
+      "weapons": "Simple weapons",
+      "skillCount": 2,
+      "skillChoices": [
+        "history",
+        "insight",
+        "medicine",
+        "persuasion",
+        "religion"
+      ],
+      "subclassLevel": 3,
+      "isSpellcaster": true,
+      "spellcastingAbility": "wis",
+      "spellList": "cleric",
+      "cantripsKnown": 3,
+      "spellsKnown": 4,
+      "preparedCaster": true,
+      "fightingStyle": false,
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "druid",
+      "name": "Druid",
+      "hitDie": 8,
+      "primary": [
+        "wis"
+      ],
+      "saves": [
+        "int",
+        "wis"
+      ],
+      "blurb": "Nature magic and, from level 2, turning into animals.",
+      "meta": "Enormously versatile. Wild Shape is the most fun button in the game.",
+      "armor": "Light armour, shields",
+      "weapons": "Simple weapons",
+      "skillCount": 2,
+      "skillChoices": [
+        "animal-handling",
+        "arcana",
+        "insight",
+        "medicine",
+        "nature",
+        "perception",
+        "religion",
+        "survival"
+      ],
+      "subclassLevel": 3,
+      "isSpellcaster": true,
+      "spellcastingAbility": "wis",
+      "spellList": "druid",
+      "cantripsKnown": 2,
+      "spellsKnown": 4,
+      "preparedCaster": true,
+      "fightingStyle": false,
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "fighter",
+      "name": "Fighter",
+      "hitDie": 10,
+      "primary": [
+        "str",
+        "dex"
+      ],
+      "saves": [
+        "str",
+        "con"
+      ],
+      "blurb": "Every weapon, every armour, and more attacks than anyone.",
+      "meta": "Good if you want to charge in first and still be standing after.",
+      "armor": "All armour, shields",
+      "weapons": "Simple and martial weapons",
+      "skillCount": 2,
+      "skillChoices": [
+        "acrobatics",
+        "animal-handling",
+        "athletics",
+        "history",
+        "insight",
+        "intimidation",
+        "perception",
+        "persuasion",
+        "survival"
+      ],
+      "subclassLevel": 3,
+      "isSpellcaster": false,
+      "fightingStyle": true,
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "monk",
+      "name": "Monk",
+      "hitDie": 8,
+      "primary": [
+        "dex",
+        "wis"
+      ],
+      "saves": [
+        "str",
+        "dex"
+      ],
+      "blurb": "Unarmed strikes, absurd mobility, and no armour at all.",
+      "meta": "Fast and slippery. Rewards players who like moving around the battlefield.",
+      "armor": "None",
+      "weapons": "Simple weapons and martial weapons with the Light property",
+      "skillCount": 2,
+      "skillChoices": [
+        "acrobatics",
+        "athletics",
+        "history",
+        "insight",
+        "religion",
+        "stealth"
+      ],
+      "subclassLevel": 3,
+      "isSpellcaster": false,
+      "fightingStyle": false,
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "paladin",
+      "name": "Paladin",
+      "hitDie": 10,
+      "primary": [
+        "str",
+        "cha"
+      ],
+      "saves": [
+        "wis",
+        "cha"
+      ],
+      "blurb": "Heavy armour, an oath, and the ability to dump damage into one hit.",
+      "meta": "Tanky and terrifying. Divine Smite is the biggest single hit at low levels.",
+      "armor": "All armour, shields",
+      "weapons": "Simple and martial weapons",
+      "skillCount": 2,
+      "skillChoices": [
+        "athletics",
+        "insight",
+        "intimidation",
+        "medicine",
+        "persuasion",
+        "religion"
+      ],
+      "subclassLevel": 3,
+      "isSpellcaster": true,
+      "spellcastingAbility": "cha",
+      "spellList": "paladin",
+      "cantripsKnown": 0,
+      "spellsKnown": 2,
+      "preparedCaster": true,
+      "halfCaster": true,
+      "fightingStyle": true,
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "ranger",
+      "name": "Ranger",
+      "hitDie": 10,
+      "primary": [
+        "dex",
+        "wis"
+      ],
+      "saves": [
+        "str",
+        "dex"
+      ],
+      "blurb": "Wilderness expert, skilled tracker, and a bit of nature magic.",
+      "meta": "Best skill spread of the martial classes. Strong at range.",
+      "armor": "Light and medium armour, shields",
+      "weapons": "Simple and martial weapons",
+      "skillCount": 3,
+      "skillChoices": [
+        "animal-handling",
+        "athletics",
+        "insight",
+        "investigation",
+        "nature",
+        "perception",
+        "stealth",
+        "survival"
+      ],
+      "subclassLevel": 3,
+      "isSpellcaster": true,
+      "spellcastingAbility": "wis",
+      "spellList": "ranger",
+      "cantripsKnown": 0,
+      "spellsKnown": 2,
+      "preparedCaster": true,
+      "halfCaster": true,
+      "fightingStyle": true,
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "rogue",
+      "name": "Rogue",
+      "hitDie": 8,
+      "primary": [
+        "dex"
+      ],
+      "saves": [
+        "dex",
+        "int"
+      ],
+      "blurb": "Sneak attacks, locks, traps, and lies.",
+      "meta": "Most skills of any class. Great if you like solving problems sideways.",
+      "armor": "Light armour",
+      "weapons": "Simple weapons and martial weapons with Finesse or Light",
+      "skillCount": 4,
+      "skillChoices": [
+        "acrobatics",
+        "athletics",
+        "deception",
+        "insight",
+        "intimidation",
+        "investigation",
+        "perception",
+        "performance",
+        "persuasion",
+        "sleight-of-hand",
+        "stealth"
+      ],
+      "subclassLevel": 3,
+      "isSpellcaster": false,
+      "fightingStyle": false,
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "sorcerer",
+      "name": "Sorcerer",
+      "hitDie": 6,
+      "primary": [
+        "cha"
+      ],
+      "saves": [
+        "con",
+        "cha"
+      ],
+      "blurb": "Innate magic you bend and reshape on the fly. Fewest spells, most flexibility.",
+      "meta": "Metamagic lets you break the rules of your own spells. Very fragile.",
+      "armor": "None",
+      "weapons": "Simple weapons",
+      "skillCount": 2,
+      "skillChoices": [
+        "arcana",
+        "deception",
+        "insight",
+        "intimidation",
+        "persuasion",
+        "religion"
+      ],
+      "subclassLevel": 3,
+      "isSpellcaster": true,
+      "spellcastingAbility": "cha",
+      "spellList": "sorcerer",
+      "cantripsKnown": 4,
+      "spellsKnown": 2,
+      "preparedCaster": true,
+      "fightingStyle": false,
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "warlock",
+      "name": "Warlock",
+      "hitDie": 8,
+      "primary": [
+        "cha"
+      ],
+      "saves": [
+        "wis",
+        "cha"
+      ],
+      "blurb": "A pact with something powerful. Few spell slots, but they recharge on a short rest.",
+      "meta": "Eldritch Blast all day. The most distinctive caster in the game.",
+      "armor": "Light armour",
+      "weapons": "Simple weapons",
+      "skillCount": 2,
+      "skillChoices": [
+        "arcana",
+        "deception",
+        "history",
+        "intimidation",
+        "investigation",
+        "nature",
+        "religion"
+      ],
+      "subclassLevel": 3,
+      "isSpellcaster": true,
+      "spellcastingAbility": "cha",
+      "spellList": "warlock",
+      "cantripsKnown": 2,
+      "spellsKnown": 2,
+      "preparedCaster": true,
+      "pactMagic": true,
+      "fightingStyle": false,
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "wizard",
+      "name": "Wizard",
+      "hitDie": 6,
+      "primary": [
+        "int"
+      ],
+      "saves": [
+        "int",
+        "wis"
+      ],
+      "blurb": "A book of spells and a low pain threshold.",
+      "meta": "The most versatile class in the game. Very fragile at low levels.",
+      "armor": "None",
+      "weapons": "Simple weapons",
+      "skillCount": 2,
+      "skillChoices": [
+        "arcana",
+        "history",
+        "insight",
+        "investigation",
+        "medicine",
+        "nature",
+        "religion"
+      ],
+      "subclassLevel": 3,
+      "isSpellcaster": true,
+      "spellcastingAbility": "int",
+      "spellList": "wizard",
+      "cantripsKnown": 3,
+      "spellsKnown": 4,
+      "preparedCaster": true,
+      "fightingStyle": false,
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    }
+  ],
+  "subclasses": [
+    {
+      "key": "berserker",
+      "classKey": "barbarian",
+      "name": "Path of the Berserker",
+      "blurb": "Frenzy. More attacks, more damage, no subtlety whatsoever.",
+      "meta": "The straightforward damage option.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "lore",
+      "classKey": "bard",
+      "name": "College of Lore",
+      "blurb": "Cutting Words and extra skills. Steal spells from any class.",
+      "meta": "The knowledge and control option.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "life",
+      "classKey": "cleric",
+      "name": "Life Domain",
+      "blurb": "Healing above all. Every heal you cast does more.",
+      "meta": "The classic support pick.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "land",
+      "classKey": "druid",
+      "name": "Circle of the Land",
+      "blurb": "Extra spells tied to a terrain, and recover slots on a short rest.",
+      "meta": "The spellcasting-focused druid.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "champion",
+      "classKey": "fighter",
+      "name": "Champion",
+      "blurb": "Crit on 19-20, and it gets better. Almost no bookkeeping.",
+      "meta": "Best first-ever character in the game.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "open-hand",
+      "classKey": "monk",
+      "name": "Warrior of the Open Hand",
+      "blurb": "Push, trip, or stun with your flurry. Heal yourself later.",
+      "meta": "The pure martial-artist monk.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "devotion",
+      "classKey": "paladin",
+      "name": "Oath of Devotion",
+      "blurb": "The knight in shining armour. Protect allies, smite the wicked.",
+      "meta": "The archetypal paladin.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "hunter",
+      "classKey": "ranger",
+      "name": "Hunter",
+      "blurb": "Pick your prey and specialise your damage against it.",
+      "meta": "Simple, flexible, effective.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "thief",
+      "classKey": "rogue",
+      "name": "Thief",
+      "blurb": "Fast hands, second-storey work, and using magic items you shouldn't.",
+      "meta": "The utility and mobility rogue.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "draconic",
+      "classKey": "sorcerer",
+      "name": "Draconic Sorcery",
+      "blurb": "Dragon blood. More HP, natural armour, and wings later.",
+      "meta": "The durable sorcerer.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "fiend",
+      "classKey": "warlock",
+      "name": "Fiend Patron",
+      "blurb": "A devil backs you. Temporary HP on every kill.",
+      "meta": "The damage-and-survivability warlock.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "evoker",
+      "classKey": "wizard",
+      "name": "Evoker",
+      "blurb": "Blow things up without hitting your friends.",
+      "meta": "Sculpt Spells is the best level-3 feature in the game.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    }
+  ],
+  "backgrounds": [
+    {
+      "key": "acolyte",
+      "name": "Acolyte",
+      "blurb": "You served in a temple. You know the rites and the politics.",
+      "meta": "INT / WIS / CHA · Magic Initiate (Cleric)",
+      "abilityOptions": [
+        "int",
+        "wis",
+        "cha"
+      ],
+      "originFeat": "magic-initiate",
+      "skills": [
+        "insight",
+        "religion"
+      ],
+      "tool": "Calligrapher's Supplies",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "criminal",
+      "name": "Criminal",
+      "blurb": "You made your living outside the law. You still know people.",
+      "meta": "DEX / CON / INT · Alert",
+      "abilityOptions": [
+        "dex",
+        "con",
+        "int"
+      ],
+      "originFeat": "alert",
+      "skills": [
+        "sleight-of-hand",
+        "stealth"
+      ],
+      "tool": "Thieves' Tools",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "sage",
+      "name": "Sage",
+      "blurb": "You spent years with books. You know where to look things up.",
+      "meta": "CON / INT / WIS · Magic Initiate (Wizard)",
+      "abilityOptions": [
+        "con",
+        "int",
+        "wis"
+      ],
+      "originFeat": "magic-initiate",
+      "skills": [
+        "arcana",
+        "history"
+      ],
+      "tool": "Calligrapher's Supplies",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "soldier",
+      "name": "Soldier",
+      "blurb": "You trained and fought as part of an army. You know how to take a hit.",
+      "meta": "STR / DEX / CON · Savage Attacker",
+      "abilityOptions": [
+        "str",
+        "dex",
+        "con"
+      ],
+      "originFeat": "savage-attacker",
+      "skills": [
+        "athletics",
+        "intimidation"
+      ],
+      "tool": "Gaming Set",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    }
+  ],
+  "feats": [
+    {
+      "key": "alert",
+      "name": "Alert",
+      "category": "origin",
+      "minLevel": 1,
+      "blurb": "Add your Proficiency Bonus to Initiative, and swap Initiative with a willing ally.",
+      "meta": "Going first is worth more than almost anything else.",
+      "prereq": null,
+      "repeatable": false,
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "magic-initiate",
+      "name": "Magic Initiate",
+      "category": "origin",
+      "minLevel": 1,
+      "blurb": "Learn two cantrips and one level-1 spell from a chosen class's list.",
+      "meta": "The most flexible origin feat. Repeatable.",
+      "prereq": null,
+      "repeatable": true,
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "savage-attacker",
+      "name": "Savage Attacker",
+      "category": "origin",
+      "minLevel": 1,
+      "blurb": "Once per turn, reroll your weapon's damage dice and use either total.",
+      "meta": "Quietly excellent on big two-handed weapons.",
+      "prereq": null,
+      "repeatable": false,
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "skilled",
+      "name": "Skilled",
+      "category": "origin",
+      "minLevel": 1,
+      "blurb": "Gain proficiency in any three skills or tools.",
+      "meta": "Repeatable. Turns any character into a generalist.",
+      "prereq": null,
+      "repeatable": true,
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "ability-score-improvement",
+      "name": "Ability Score Improvement",
+      "category": "general",
+      "minLevel": 4,
+      "blurb": "Increase one ability score by 2, or two scores by 1 each. Max 20.",
+      "meta": "The default choice. Repeatable.",
+      "prereq": "Level 4+",
+      "repeatable": true,
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "grappler",
+      "name": "Grappler",
+      "category": "general",
+      "minLevel": 4,
+      "blurb": "Advantage on attacks against creatures you grapple, and you can drag them along.",
+      "meta": "Strong on any character built around control.",
+      "prereq": "Level 4+, Strength or Dexterity 13+",
+      "prereqCheck": {
+        "anyAbilityAtLeast": {
+          "abilities": [
+            "str",
+            "dex"
+          ],
+          "value": 13
+        }
+      },
+      "repeatable": false,
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "archery",
+      "name": "Archery",
+      "category": "fighting-style",
+      "minLevel": 1,
+      "blurb": "+2 to attack rolls with ranged weapons.",
+      "meta": "The strongest raw-numbers fighting style.",
+      "prereq": "Fighting Style feature",
+      "repeatable": false,
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "defense",
+      "name": "Defense",
+      "category": "fighting-style",
+      "minLevel": 1,
+      "blurb": "+1 AC while wearing armour.",
+      "meta": "Never a bad pick. Always applies.",
+      "prereq": "Fighting Style feature",
+      "repeatable": false,
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "great-weapon-fighting",
+      "name": "Great Weapon Fighting",
+      "category": "fighting-style",
+      "minLevel": 1,
+      "blurb": "Reroll 1s and 2s on damage with two-handed or versatile weapons.",
+      "meta": "For the greatsword build.",
+      "prereq": "Fighting Style feature",
+      "repeatable": false,
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "two-weapon-fighting",
+      "name": "Two-Weapon Fighting",
+      "category": "fighting-style",
+      "minLevel": 1,
+      "blurb": "Add your ability modifier to the damage of your second attack.",
+      "meta": "Makes dual-wielding actually worth it.",
+      "prereq": "Fighting Style feature",
+      "repeatable": false,
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "boon-combat-prowess",
+      "name": "Boon of Combat Prowess",
+      "category": "epic-boon",
+      "minLevel": 19,
+      "blurb": "Once per turn, turn a miss into a hit.",
+      "meta": "",
+      "prereq": "Level 19+",
+      "repeatable": false,
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "boon-dimensional-travel",
+      "name": "Boon of Dimensional Travel",
+      "category": "epic-boon",
+      "minLevel": 19,
+      "blurb": "Cast Misty Step as a bonus action, twice per long rest, without a slot.",
+      "meta": "",
+      "prereq": "Level 19+",
+      "repeatable": false,
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "boon-fate",
+      "name": "Boon of Fate",
+      "category": "epic-boon",
+      "minLevel": 19,
+      "blurb": "Add 2d4 to a d20 test made by you or a creature within 60 feet.",
+      "meta": "",
+      "prereq": "Level 19+",
+      "repeatable": false,
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "boon-irresistible-offense",
+      "name": "Boon of Irresistible Offense",
+      "category": "epic-boon",
+      "minLevel": 19,
+      "blurb": "Your weapon damage ignores resistance and immunity.",
+      "meta": "",
+      "prereq": "Level 19+",
+      "repeatable": false,
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "boon-spell-recall",
+      "name": "Boon of Spell Recall",
+      "category": "epic-boon",
+      "minLevel": 19,
+      "blurb": "Cast level 1-4 spells without expending a slot, once each per long rest.",
+      "meta": "",
+      "prereq": "Level 19+, Spellcasting feature",
+      "prereqCheck": {
+        "requiresSpellcasting": true
+      },
+      "repeatable": false,
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "boon-night-spirit",
+      "name": "Boon of the Night Spirit",
+      "category": "epic-boon",
+      "minLevel": 19,
+      "blurb": "Become Invisible and take half damage while in dim light or darkness.",
+      "meta": "",
+      "prereq": "Level 19+",
+      "repeatable": false,
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "boon-truesight",
+      "name": "Boon of Truesight",
+      "category": "epic-boon",
+      "minLevel": 19,
+      "blurb": "Truesight out to 60 feet.",
+      "meta": "",
+      "prereq": "Level 19+",
+      "repeatable": false,
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    }
+  ],
+  "spells": [
+    {
+      "key": "acid-splash",
+      "name": "Acid Splash",
+      "level": 0,
+      "lists": [
+        "sorcerer",
+        "wizard"
+      ],
+      "blurb": "Hurl acid at one or two creatures.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "chill-touch",
+      "name": "Chill Touch",
+      "level": 0,
+      "lists": [
+        "warlock"
+      ],
+      "blurb": "Necrotic damage at range; target can't regain HP.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "dancing-lights",
+      "name": "Dancing Lights",
+      "level": 0,
+      "lists": [
+        "bard"
+      ],
+      "blurb": "Up to four floating lights you can move.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "druidcraft",
+      "name": "Druidcraft",
+      "level": 0,
+      "lists": [
+        "druid"
+      ],
+      "blurb": "Small nature effects. Predict the weather.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "eldritch-blast",
+      "name": "Eldritch Blast",
+      "level": 0,
+      "lists": [
+        "warlock"
+      ],
+      "blurb": "The warlock's signature. Scales with level.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "fire-bolt",
+      "name": "Fire Bolt",
+      "level": 0,
+      "lists": [
+        "sorcerer",
+        "wizard"
+      ],
+      "blurb": "Ranged spell attack, 1d10 fire.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "guidance",
+      "name": "Guidance",
+      "level": 0,
+      "lists": [
+        "cleric",
+        "druid"
+      ],
+      "blurb": "+1d4 to an ally's ability check.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "light",
+      "name": "Light",
+      "level": 0,
+      "lists": [
+        "cleric",
+        "sorcerer",
+        "wizard"
+      ],
+      "blurb": "An object sheds bright light.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "mage-hand",
+      "name": "Mage Hand",
+      "level": 0,
+      "lists": [
+        "bard",
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ],
+      "blurb": "A spectral hand that fetches things.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "mending",
+      "name": "Mending",
+      "level": 0,
+      "lists": [
+        "druid",
+        "wizard"
+      ],
+      "blurb": "Repair a single break or tear.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "minor-illusion",
+      "name": "Minor Illusion",
+      "level": 0,
+      "lists": [
+        "bard",
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ],
+      "blurb": "A small sound or image. Endlessly abusable.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "poison-spray",
+      "name": "Poison Spray",
+      "level": 0,
+      "lists": [
+        "druid",
+        "warlock"
+      ],
+      "blurb": "A puff of poison at close range.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "prestidigitation",
+      "name": "Prestidigitation",
+      "level": 0,
+      "lists": [
+        "bard",
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ],
+      "blurb": "Minor magical tricks. Endlessly useful.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "produce-flame",
+      "name": "Produce Flame",
+      "level": 0,
+      "lists": [
+        "druid"
+      ],
+      "blurb": "A flame in your hand: light it or throw it.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "ray-of-frost",
+      "name": "Ray of Frost",
+      "level": 0,
+      "lists": [
+        "sorcerer",
+        "wizard"
+      ],
+      "blurb": "Cold damage and slows the target.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "sacred-flame",
+      "name": "Sacred Flame",
+      "level": 0,
+      "lists": [
+        "cleric"
+      ],
+      "blurb": "Radiant damage that ignores cover.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "shillelagh",
+      "name": "Shillelagh",
+      "level": 0,
+      "lists": [
+        "druid"
+      ],
+      "blurb": "Your club uses your spellcasting ability.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "shocking-grasp",
+      "name": "Shocking Grasp",
+      "level": 0,
+      "lists": [
+        "sorcerer",
+        "wizard"
+      ],
+      "blurb": "Lightning; target can't take reactions.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "spare-the-dying",
+      "name": "Spare the Dying",
+      "level": 0,
+      "lists": [
+        "cleric"
+      ],
+      "blurb": "Stabilise a dying creature at range.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "thaumaturgy",
+      "name": "Thaumaturgy",
+      "level": 0,
+      "lists": [
+        "cleric"
+      ],
+      "blurb": "Minor signs of supernatural power.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "vicious-mockery",
+      "name": "Vicious Mockery",
+      "level": 0,
+      "lists": [
+        "bard"
+      ],
+      "blurb": "Insult someone into taking damage.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "bless",
+      "name": "Bless",
+      "level": 1,
+      "lists": [
+        "cleric",
+        "paladin"
+      ],
+      "blurb": "+1d4 to allies' attacks and saves.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "burning-hands",
+      "name": "Burning Hands",
+      "level": 1,
+      "lists": [
+        "sorcerer",
+        "wizard"
+      ],
+      "blurb": "A 15-foot cone of fire.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "charm-person",
+      "name": "Charm Person",
+      "level": 1,
+      "lists": [
+        "bard",
+        "druid",
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ],
+      "blurb": "Make a humanoid friendly to you.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "chromatic-orb",
+      "name": "Chromatic Orb",
+      "level": 1,
+      "lists": [
+        "sorcerer",
+        "wizard"
+      ],
+      "blurb": "A 4d8 orb of the damage type you pick.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "command",
+      "name": "Command",
+      "level": 1,
+      "lists": [
+        "cleric",
+        "paladin"
+      ],
+      "blurb": "One-word order the target must obey.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "comprehend-languages",
+      "name": "Comprehend Languages",
+      "level": 1,
+      "lists": [
+        "bard",
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ],
+      "blurb": "Understand any spoken or written language.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "cure-wounds",
+      "name": "Cure Wounds",
+      "level": 1,
+      "lists": [
+        "bard",
+        "cleric",
+        "druid",
+        "paladin",
+        "ranger"
+      ],
+      "blurb": "Touch to heal 2d8 + modifier.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "detect-evil-and-good",
+      "name": "Detect Evil and Good",
+      "level": 1,
+      "lists": [
+        "cleric",
+        "paladin"
+      ],
+      "blurb": "Sense aberrations, celestials, fiends and undead.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "detect-magic",
+      "name": "Detect Magic",
+      "level": 1,
+      "lists": [
+        "bard",
+        "cleric",
+        "druid",
+        "paladin",
+        "ranger",
+        "sorcerer",
+        "wizard"
+      ],
+      "blurb": "Sense magic within 30 feet.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "disguise-self",
+      "name": "Disguise Self",
+      "level": 1,
+      "lists": [
+        "bard",
+        "sorcerer",
+        "wizard"
+      ],
+      "blurb": "Change your appearance.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "dissonant-whispers",
+      "name": "Dissonant Whispers",
+      "level": 1,
+      "lists": [
+        "bard"
+      ],
+      "blurb": "Psychic damage and the target flees.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "divine-favor",
+      "name": "Divine Favor",
+      "level": 1,
+      "lists": [
+        "paladin"
+      ],
+      "blurb": "Your weapon deals extra radiant damage.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "ensnaring-strike",
+      "name": "Ensnaring Strike",
+      "level": 1,
+      "lists": [
+        "ranger"
+      ],
+      "blurb": "Vines restrain the creature you hit.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "entangle",
+      "name": "Entangle",
+      "level": 1,
+      "lists": [
+        "druid"
+      ],
+      "blurb": "Grasping weeds restrain everyone in a square.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "expeditious-retreat",
+      "name": "Expeditious Retreat",
+      "level": 1,
+      "lists": [
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ],
+      "blurb": "Dash as a bonus action every turn.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "faerie-fire",
+      "name": "Faerie Fire",
+      "level": 1,
+      "lists": [
+        "bard",
+        "druid"
+      ],
+      "blurb": "Outlines creatures; advantage to hit them.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "false-life",
+      "name": "False Life",
+      "level": 1,
+      "lists": [
+        "sorcerer",
+        "wizard"
+      ],
+      "blurb": "Temporary hit points.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "feather-fall",
+      "name": "Feather Fall",
+      "level": 1,
+      "lists": [
+        "bard",
+        "sorcerer",
+        "wizard"
+      ],
+      "blurb": "Reaction: falling creatures drift down safely.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "find-familiar",
+      "name": "Find Familiar",
+      "level": 1,
+      "lists": [
+        "wizard"
+      ],
+      "blurb": "A spirit companion in animal form.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "fog-cloud",
+      "name": "Fog Cloud",
+      "level": 1,
+      "lists": [
+        "druid",
+        "ranger",
+        "sorcerer",
+        "wizard"
+      ],
+      "blurb": "A 20-foot sphere of heavy obscurement.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "goodberry",
+      "name": "Goodberry",
+      "level": 1,
+      "lists": [
+        "druid",
+        "ranger"
+      ],
+      "blurb": "Ten berries, each healing 1 HP and feeding you.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "grease",
+      "name": "Grease",
+      "level": 1,
+      "lists": [
+        "wizard"
+      ],
+      "blurb": "Slick ground; creatures fall prone.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "guiding-bolt",
+      "name": "Guiding Bolt",
+      "level": 1,
+      "lists": [
+        "cleric"
+      ],
+      "blurb": "4d6 radiant and advantage on the next attack.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "healing-word",
+      "name": "Healing Word",
+      "level": 1,
+      "lists": [
+        "bard",
+        "cleric",
+        "druid"
+      ],
+      "blurb": "Bonus-action heal at range.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "hellish-rebuke",
+      "name": "Hellish Rebuke",
+      "level": 1,
+      "lists": [
+        "warlock"
+      ],
+      "blurb": "Reaction: set your attacker on fire.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "heroism",
+      "name": "Heroism",
+      "level": 1,
+      "lists": [
+        "bard",
+        "paladin"
+      ],
+      "blurb": "Immunity to Frightened plus temporary HP.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "hex",
+      "name": "Hex",
+      "level": 1,
+      "lists": [
+        "warlock"
+      ],
+      "blurb": "Extra damage to one target, and disadvantage on one ability.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "hunters-mark",
+      "name": "Hunter's Mark",
+      "level": 1,
+      "lists": [
+        "ranger"
+      ],
+      "blurb": "Extra damage to a target you keep hunting.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "identify",
+      "name": "Identify",
+      "level": 1,
+      "lists": [
+        "bard",
+        "wizard"
+      ],
+      "blurb": "Learn a magic item's properties.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "illusory-script",
+      "name": "Illusory Script",
+      "level": 1,
+      "lists": [
+        "bard",
+        "warlock",
+        "wizard"
+      ],
+      "blurb": "Writing only chosen readers can understand.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "inflict-wounds",
+      "name": "Inflict Wounds",
+      "level": 1,
+      "lists": [
+        "cleric"
+      ],
+      "blurb": "Touch attack for heavy necrotic damage.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "longstrider",
+      "name": "Longstrider",
+      "level": 1,
+      "lists": [
+        "bard",
+        "druid",
+        "ranger",
+        "wizard"
+      ],
+      "blurb": "+10 feet of speed for an hour.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "mage-armor",
+      "name": "Mage Armor",
+      "level": 1,
+      "lists": [
+        "sorcerer",
+        "wizard"
+      ],
+      "blurb": "Base AC 13 + DEX for eight hours.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "magic-missile",
+      "name": "Magic Missile",
+      "level": 1,
+      "lists": [
+        "sorcerer",
+        "wizard"
+      ],
+      "blurb": "Three darts that never miss.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "protection-from-evil-and-good",
+      "name": "Protection from Evil and Good",
+      "level": 1,
+      "lists": [
+        "cleric",
+        "paladin",
+        "warlock",
+        "wizard"
+      ],
+      "blurb": "Ward against certain creature types.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "sanctuary",
+      "name": "Sanctuary",
+      "level": 1,
+      "lists": [
+        "cleric"
+      ],
+      "blurb": "Attackers must pass a save to target the warded creature.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "shield",
+      "name": "Shield",
+      "level": 1,
+      "lists": [
+        "sorcerer",
+        "wizard"
+      ],
+      "blurb": "Reaction: +5 AC. Saves your life.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "shield-of-faith",
+      "name": "Shield of Faith",
+      "level": 1,
+      "lists": [
+        "cleric",
+        "paladin"
+      ],
+      "blurb": "+2 AC to a creature for ten minutes.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "silent-image",
+      "name": "Silent Image",
+      "level": 1,
+      "lists": [
+        "bard",
+        "sorcerer",
+        "wizard"
+      ],
+      "blurb": "A moving visual illusion.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "sleep",
+      "name": "Sleep",
+      "level": 1,
+      "lists": [
+        "bard",
+        "sorcerer",
+        "wizard"
+      ],
+      "blurb": "Knock weaker creatures unconscious.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "speak-with-animals",
+      "name": "Speak with Animals",
+      "level": 1,
+      "lists": [
+        "bard",
+        "druid",
+        "ranger"
+      ],
+      "blurb": "Talk to beasts.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "thunderwave",
+      "name": "Thunderwave",
+      "level": 1,
+      "lists": [
+        "bard",
+        "druid",
+        "sorcerer",
+        "wizard"
+      ],
+      "blurb": "A wave of force that pushes everyone back.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "unseen-servant",
+      "name": "Unseen Servant",
+      "level": 1,
+      "lists": [
+        "bard",
+        "warlock",
+        "wizard"
+      ],
+      "blurb": "An invisible force that does chores.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "key": "witch-bolt",
+      "name": "Witch Bolt",
+      "level": 1,
+      "lists": [
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ],
+      "blurb": "A sustained arc of lightning.",
+      "source": "SRD 5.2.1",
+      "license": "CC-BY-4.0"
+    }
+  ],
+  "_excluded": {
+    "note": "Present in the 2024 Player's Handbook but NOT in the CC-BY SRD. Do not ship these. See docs/03-legal.md.",
+    "species": [
+      "Aasimar"
+    ],
+    "classes": [
+      "Artificer (not a 2024 PHB class either)"
+    ],
+    "subclasses": "36 of 48 — the SRD gives exactly one subclass per class",
+    "backgrounds": [
+      "Artisan",
+      "Charlatan",
+      "Entertainer",
+      "Farmer",
+      "Guard",
+      "Guide",
+      "Hermit",
+      "Merchant",
+      "Noble",
+      "Sailor",
+      "Scribe",
+      "Wayfarer"
+    ],
+    "feats": "Roughly 58 further feats, including Lucky, Tough, Sentinel, Great Weapon Master, Sharpshooter, Polearm Master, War Caster, Resilient, Mobile, Crossbow Expert, Healer, Musician, Tavern Brawler, Athlete, Actor, Observant, Skulker, Mage Slayer, Elemental Adept, Ritual Caster, Spell Sniper, Telekinetic, Telepathic, Fey-Touched, Shadow-Touched, and the remaining Fighting Styles (Blind Fighting, Dueling, Interception, Protection, Thrown Weapon Fighting, Unarmed Fighting).",
+    "howToOfferThemAnyway": "Ship the engine, not the content. A user or a GM may author these as homebrew in their own ruleset — that is their legal exposure, not yours, and it is the same posture Foundry VTT takes."
+  }
+}

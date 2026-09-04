@@ -1,0 +1,36 @@
+{
+  "//": [
+    "Composite indexes, deployed with: firebase deploy --only firestore:indexes",
+    "",
+    "Firestore builds single-field indexes on its own. A query filtering on one",
+    "field and ordering by another needs one of these, and will fail loudly",
+    "with a console link if it is missing. They are written here rather than",
+    "clicked, so the query and the index it needs live in the same repository.",
+    "",
+    "Scope COLLECTION rather than COLLECTION_GROUP on purpose: notes are read",
+    "one session at a time, and a collection group query would need a",
+    "match /{path=**}/notes rule, which is the database-wide wildcard that",
+    "firestore.rules opens by refusing to have."
+  ],
+  "indexes": [
+    {
+      "//": "listNotes and syncNotes' full read: one book, in the order written.",
+      "collectionGroup": "notes",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "book", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "//": "syncNotes' incremental read: one book, changed since a watermark.",
+      "collectionGroup": "notes",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "book", "order": "ASCENDING" },
+        { "fieldPath": "updatedAt", "order": "ASCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

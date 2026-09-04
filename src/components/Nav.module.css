@@ -1,0 +1,71 @@
+.nav {
+  position: relative;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  max-width: var(--maxw);
+  margin: 0 auto;
+  height: var(--nav-h);
+  padding: 0 28px;
+}
+
+.wordmark {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.2em;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.amp {
+  color: var(--accent);
+  margin: 0 0.12em;
+}
+
+.links {
+  display: flex;
+  align-items: center;
+  gap: 26px;
+  margin-left: auto;
+  font-size: 14.5px;
+}
+
+.link {
+  color: var(--ink-2);
+  transition: color 160ms var(--ease-out);
+}
+
+.link:hover {
+  color: var(--ink);
+}
+
+.signIn {
+  padding: 8px 16px;
+  border: 1px solid var(--line-2);
+  border-radius: 999px;
+  color: var(--ink);
+  transition:
+    border-color 180ms var(--ease-out),
+    background-color 180ms var(--ease-out);
+}
+
+.signIn:hover {
+  border-color: var(--accent);
+  background: rgba(201, 162, 39, 0.09);
+}
+
+/*
+  Links collapse below 760px and there is no mobile menu yet. Fine at four
+  links and a real gap the moment there are five. See Home.md.
+*/
+@media (max-width: 760px) {
+  .links {
+    gap: 0;
+  }
+
+  .link {
+    display: none;
+  }
+}

@@ -1,0 +1,77 @@
+/* ---------------------------------------------------------------------------
+   The account frame: StubPage's banded opening without the stub badge.
+   --------------------------------------------------------------------------- */
+
+.page {
+  --tone: var(--accent);
+  --tone-soft: var(--accent-2);
+}
+
+.band {
+  position: relative;
+  border-bottom: 1px solid var(--line);
+  background:
+    radial-gradient(
+      120% 140% at 8% 0%,
+      color-mix(in srgb, var(--tone) 10%, transparent),
+      transparent 62%
+    ),
+    linear-gradient(var(--bg-2), var(--bg));
+}
+
+.band::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--tone) 60%, transparent),
+    transparent 58%
+  );
+}
+
+.bandInner {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 54px 28px 44px;
+  display: grid;
+  gap: 14px;
+}
+
+.eyebrow {
+  font-size: 11.5px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--tone-soft);
+}
+
+.title {
+  font-size: clamp(1.9rem, 4vw, 2.7rem);
+  max-width: 22ch;
+}
+
+.lede {
+  font-size: 1.02rem;
+  line-height: 1.62;
+  color: var(--ink-2);
+  max-width: 64ch;
+}
+
+.body {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 40px 28px 88px;
+  display: grid;
+  gap: 26px;
+}
+
+@media (max-width: 620px) {
+  .bandInner {
+    padding: 40px 20px 34px;
+  }
+
+  .body {
+    padding: 30px 20px 64px;
+  }
+}

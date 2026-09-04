@@ -1,0 +1,59 @@
+/*
+  Embers rising past the dragon. They sit above the photo, not inside it, which
+  is what went wrong the first time: nested in the eye's stacking context, the
+  photo simply painted over them.
+*/
+.layer {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  /* Kept to the right half so they belong to the dragon rather than drifting
+     through the copy. */
+  left: 34%;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.spark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  opacity: 0;
+  /* A hot core falling off to nothing, rather than a flat dot. */
+  background: radial-gradient(
+    circle,
+    #fff0cf 0%,
+    var(--ember-2) 38%,
+    rgba(226, 112, 58, 0.55) 62%,
+    rgba(226, 112, 58, 0) 74%
+  );
+  /* Screen keeps them additive over the photo, so they read as light rather
+     than as paint. */
+  mix-blend-mode: screen;
+  will-change: transform, opacity;
+}
+
+/* A few carry a halo. Not all of them, or it turns into fog. */
+.spark:nth-child(4n) {
+  box-shadow: 0 0 12px 3px rgba(226, 112, 58, 0.32);
+}
+
+.spark:nth-child(7n) {
+  filter: blur(1.4px);
+}
+
+@media (max-width: 940px) {
+  .layer {
+    left: 0;
+  }
+}
+
+/* A screenful of drifting light is exactly what this setting is for. */
+@media (prefers-reduced-motion: reduce) {
+  .layer {
+    display: none;
+  }
+}

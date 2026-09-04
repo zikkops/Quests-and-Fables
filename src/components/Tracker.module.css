@@ -1,0 +1,706 @@
+/* ---------------------------------------------------------------------------
+   The tracker
+
+   Four sheets across, and every one of them is small on purpose. A card holds
+   hit points, the three numbers a table asks for out loud, spell slots and
+   conditions, and folds the eighteen skills and six saves away behind one line,
+   because the point being made is that a game master can hold the whole table
+   in a single glance.
+   --------------------------------------------------------------------------- */
+
+.demo {
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-lg);
+  background: var(--bg);
+  padding: 16px 16px 18px;
+  box-shadow: 0 24px 60px -40px rgb(0 0 0 / 0.9);
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.demoLabel {
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.controls {
+  display: flex;
+  gap: 8px;
+}
+
+.rest,
+.restLong,
+.reset {
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 7px 13px;
+  border-radius: 999px;
+  cursor: pointer;
+  border: 1px solid var(--line-2);
+  background: var(--bg-2);
+  color: var(--ink-2);
+  transition:
+    border-color 160ms var(--ease-out),
+    background 160ms var(--ease-out),
+    color 160ms var(--ease-out);
+}
+
+.rest:hover,
+.reset:hover {
+  border-color: var(--accent);
+  color: var(--ink);
+}
+
+/* The long rest is the one worth pressing, so it is the one that looks it. */
+.restLong {
+  border-color: transparent;
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.restLong:hover {
+  background: var(--accent-2);
+}
+
+/* What just happened, in words. Doubles as the live region, so a screen reader
+   hears "long rest, every slot back" rather than nothing at all. */
+.said {
+  margin: 12px 0 14px;
+  font-size: 13px;
+  color: var(--ink-3);
+  border-left: 2px solid var(--line-2);
+  padding-left: 10px;
+  min-height: 1.2em;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.card {
+  display: grid;
+  align-content: start;
+  padding: 14px 14px 15px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+}
+
+/* ---- dead ----------------------------------------------------------------
+   Everything drains out of the card and the word sits across the middle of it.
+   The mark takes no pointer events, so the controls underneath still work and a
+   game master can heal somebody who was killed by a mistyped number.
+   -------------------------------------------------------------------------- */
+
+.dead {
+  position: relative;
+}
+
+.dead .body {
+  filter: grayscale(1);
+  opacity: 0.35;
+}
+
+.deadMark {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 12px;
+  /* The layer takes the pointer itself. A dead sheet has one control on it and
+     that is Revive; the greyed out buttons behind must not be reachable, by
+     mouse or by tab, and the fieldset in the markup handles the tabbing. */
+  background: color-mix(in srgb, var(--bg) 55%, transparent);
+  border-radius: var(--r);
+}
+
+.deadWord {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
+  text-transform: uppercase;
+  color: var(--err);
+  text-shadow: 0 2px 18px rgb(0 0 0 / 0.85);
+}
+
+.revive {
+  pointer-events: auto;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 999px;
+  color: var(--ink);
+  border: 1px solid color-mix(in srgb, var(--err) 60%, transparent);
+  background: color-mix(in srgb, var(--err) 22%, var(--bg));
+  box-shadow: 0 6px 20px rgb(0 0 0 / 0.6);
+  transition:
+    border-color 160ms var(--ease-out),
+    background 160ms var(--ease-out);
+}
+
+.revive:hover {
+  border-color: var(--err);
+  background: color-mix(in srgb, var(--err) 34%, var(--bg));
+}
+
+/* The card's contents, as one disable-able block. min-width matters: a fieldset
+   brings its own intrinsic minimum and will refuse to narrow in a grid. */
+.body {
+  display: grid;
+  gap: 9px;
+  align-content: start;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.cardHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.name {
+  font-family: var(--font-display);
+  font-size: 1.02rem;
+}
+
+.build {
+  font-size: 11px;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+/* ---- hit points ---------------------------------------------------------- */
+
+.hpRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.hpNumbers {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.hp,
+.hpLow {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.hp {
+  color: var(--ink);
+}
+
+.hpLow {
+  color: var(--err);
+}
+
+.hpMax {
+  font-size: 11.5px;
+  color: var(--ink-3);
+}
+
+/* Temporary hit points sit beside the real ones rather than being added into
+   them, because they are a different thing: damage takes these first, healing
+   never puts them back, and a long rest ends them. */
+.temp {
+  margin-left: 3px;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--warn);
+  border: 1px solid color-mix(in srgb, var(--warn) 45%, transparent);
+  background: color-mix(in srgb, var(--warn) 12%, transparent);
+  border-radius: 999px;
+  padding: 1px 6px;
+}
+
+.hpButtons {
+  display: flex;
+  gap: 4px;
+}
+
+.step,
+.stepTemp {
+  min-width: 26px;
+  padding: 4px 6px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 1px solid var(--line-2);
+  background: var(--bg-3);
+  color: var(--ink-2);
+  transition:
+    border-color 140ms var(--ease-out),
+    color 140ms var(--ease-out);
+}
+
+.step:hover {
+  border-color: var(--accent);
+  color: var(--ink);
+}
+
+/* The buffer, in the colour the badge uses, so pressing T and the number that
+   appears are obviously the same idea. */
+.stepTemp {
+  color: var(--warn);
+  border-color: color-mix(in srgb, var(--warn) 40%, transparent);
+}
+
+.stepTemp:hover {
+  border-color: var(--warn);
+}
+
+/* A typed amount, because damage is never five. Narrow enough that the two
+   buttons and the field still fit across a card. */
+.amount {
+  width: 42px;
+  padding: 4px 2px;
+  text-align: center;
+  font: inherit;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  background: var(--bg);
+  border: 1px solid var(--line-2);
+  border-radius: 6px;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.amount::-webkit-outer-spin-button,
+.amount::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.amount:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.track {
+  display: flex;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--bg-3);
+  overflow: hidden;
+}
+
+.fill,
+.fillLow,
+.fillTemp {
+  display: block;
+  height: 100%;
+  transition: width 260ms var(--ease-out);
+}
+
+/* The shield, sitting on the end of the health rather than inside it. Striped,
+   so it reads as a different substance at a glance and not as a character who
+   is somehow above their own maximum. */
+.fillTemp {
+  background: repeating-linear-gradient(
+    115deg,
+    var(--warn) 0 3px,
+    color-mix(in srgb, var(--warn) 68%, var(--bg-3)) 3px 6px
+  );
+}
+
+.fill {
+  background: var(--ok);
+}
+
+.fillLow {
+  background: var(--err);
+}
+
+/* ---- the numbers a table asks for out loud ------------------------------- */
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin: 2px 0 0;
+  padding: 8px 0 0;
+  border-top: 1px solid var(--line);
+}
+
+.stat {
+  display: grid;
+  gap: 1px;
+  text-align: center;
+}
+
+.stat dt {
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.stat dd {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 0.98rem;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.skill {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.mod {
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- everything else, folded away ---------------------------------------- */
+
+.more {
+  border-top: 1px solid var(--line);
+  padding-top: 8px;
+}
+
+.moreSummary {
+  cursor: pointer;
+  list-style: none;
+  font-size: 11.5px;
+  color: var(--ink-3);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: color 140ms var(--ease-out);
+}
+
+.moreSummary::-webkit-details-marker {
+  display: none;
+}
+
+/* The browser's own triangle is replaced with one that turns, so the control
+   reads the same on every platform. */
+.moreSummary::before {
+  content: "";
+  width: 0;
+  height: 0;
+  border-left: 4px solid currentColor;
+  border-top: 3.5px solid transparent;
+  border-bottom: 3.5px solid transparent;
+  transition: rotate 160ms var(--ease-out);
+}
+
+.more[open] .moreSummary::before {
+  rotate: 90deg;
+}
+
+.moreSummary:hover {
+  color: var(--ink-2);
+}
+
+.moreBody {
+  display: grid;
+  gap: 6px;
+  padding-top: 9px;
+}
+
+.moreHeading {
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.saves {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+  list-style: none;
+  margin: 0 0 6px;
+  padding: 0;
+}
+
+/* A box, not a row. Label over number, so the two can never be read as
+   belonging to different abilities. */
+.save,
+.saveOn {
+  display: grid;
+  gap: 1px;
+  justify-items: center;
+  padding: 4px 2px 5px;
+  border-radius: 5px;
+  border: 1px solid var(--line);
+}
+
+.saveLabel {
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.saveMod {
+  font-family: var(--font-display);
+  font-size: 0.92rem;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}
+
+/* Proficient saves are the ones that survive a dragon's breath, so they are the
+   ones that look it. */
+.saveOn {
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.saveOn .saveMod {
+  color: var(--accent);
+}
+
+.allSkills {
+  display: grid;
+  gap: 2px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.skillOn {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--ink);
+}
+
+.dot,
+.dotOn {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin-right: 6px;
+  border-radius: 50%;
+  vertical-align: middle;
+}
+
+.dot {
+  border: 1px solid var(--line-2);
+}
+
+.dotOn {
+  background: var(--accent);
+  border: 1px solid var(--accent);
+}
+
+/* ---- spell slots --------------------------------------------------------- */
+
+.slots {
+  display: grid;
+  gap: 5px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+
+.slotRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.slotLevel {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 1px;
+  width: 18px;
+  font-size: 11px;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The mark that says this one comes back on a short rest. The renderer never
+   asks why, it just prints what the slot says about itself. */
+.short {
+  font-size: 8.5px;
+  color: var(--accent);
+}
+
+.pips {
+  display: flex;
+  gap: 4px;
+}
+
+.pip,
+.pipSpent {
+  width: 13px;
+  height: 13px;
+  padding: 0;
+  border-radius: 4px;
+  cursor: pointer;
+  transition:
+    background 140ms var(--ease-out),
+    border-color 140ms var(--ease-out),
+    transform 140ms var(--ease-out);
+}
+
+.pip {
+  background: var(--accent);
+  border: 1px solid var(--accent);
+}
+
+.pipSpent {
+  background: transparent;
+  border: 1px dashed var(--line-2);
+}
+
+.pip:hover,
+.pipSpent:hover {
+  transform: translateY(-1px);
+  border-color: var(--accent-2);
+}
+
+.noSlots {
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+  font-size: 11.5px;
+  color: var(--ink-3);
+}
+
+/* ---- conditions ---------------------------------------------------------- */
+
+.conditions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  align-items: center;
+}
+
+/* Unconscious is derived from the number rather than stored beside it, so it
+   cannot disagree with the number. It is a span, not a button: it is not the
+   game master's to lift, it lifts itself when somebody heals them. */
+.down {
+  font-size: 11px;
+  border-radius: 999px;
+  padding: 3px 9px;
+  color: var(--err);
+  border: 1px solid color-mix(in srgb, var(--err) 55%, transparent);
+  background: color-mix(in srgb, var(--err) 16%, transparent);
+}
+
+.condition,
+.exhaustion,
+.add {
+  font-size: 11px;
+  border-radius: 999px;
+  padding: 3px 9px;
+  cursor: pointer;
+  transition:
+    border-color 140ms var(--ease-out),
+    background 140ms var(--ease-out);
+}
+
+.condition {
+  color: var(--ember-2);
+  border: 1px solid color-mix(in srgb, var(--ember) 45%, transparent);
+  background: color-mix(in srgb, var(--ember) 12%, transparent);
+}
+
+.condition:hover {
+  background: color-mix(in srgb, var(--ember) 22%, transparent);
+}
+
+/* Exhaustion carries its level, because it is the one nobody remembers. */
+.exhaustion {
+  color: var(--err);
+  border: 1px solid color-mix(in srgb, var(--err) 50%, transparent);
+  background: color-mix(in srgb, var(--err) 14%, transparent);
+}
+
+.add {
+  color: var(--ink-3);
+  border: 1px dashed var(--line-2);
+  background: transparent;
+}
+
+.add:hover {
+  border-color: var(--accent);
+  color: var(--ink-2);
+}
+
+.picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 9px;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--bg-3);
+}
+
+.pick,
+.pickOn {
+  font-size: 11px;
+  border-radius: 999px;
+  padding: 3px 8px;
+  cursor: pointer;
+  border: 1px solid var(--line-2);
+  background: transparent;
+  color: var(--ink-2);
+  transition:
+    border-color 140ms var(--ease-out),
+    color 140ms var(--ease-out);
+}
+
+.pick:hover {
+  border-color: var(--accent);
+  color: var(--ink);
+}
+
+.pickOn {
+  border-color: var(--ember);
+  color: var(--ember-2);
+}
+
+
+@media (max-width: 1080px) {
+  .cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .cards {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .bar {
+    align-items: flex-start;
+  }
+}

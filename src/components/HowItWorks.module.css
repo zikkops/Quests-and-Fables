@@ -1,0 +1,390 @@
+.section {
+  position: relative;
+  border-top: 1px solid var(--line);
+  background: linear-gradient(var(--bg-2), var(--bg));
+}
+
+.inner {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 84px 28px 96px;
+}
+
+.heading {
+  display: grid;
+  gap: 12px;
+  max-width: 56ch;
+  margin-bottom: 44px;
+}
+
+.kicker {
+  font-size: 11.5px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.title {
+  font-size: clamp(1.7rem, 3vw, 2.35rem);
+}
+
+.sub {
+  color: var(--ink-2);
+  font-size: 1rem;
+}
+
+/* ---------------------------------------------------------------------------
+   The journey
+
+   Three columns: a card, the rail, and whatever hangs off it. Stops alternate
+   which side they sit on, which is what gives the rail something to curve
+   around, and the curve itself is measured in HowItWorks.tsx rather than drawn
+   here. Nothing in this file knows where the line goes.
+   --------------------------------------------------------------------------- */
+
+.journey {
+  position: relative;
+}
+
+.rail {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.spine {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2;
+  stroke-linecap: round;
+  opacity: 0.65;
+}
+
+/* A turning is dotted and dimmer: the eye should read it as optional, because
+   that is exactly what a branch is. */
+.turning {
+  fill: none;
+  stroke: var(--line-2);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-dasharray: 3 7;
+}
+
+/*
+   The mask that uncovers a turning. Fat enough to clear the dotted stroke and
+   its round caps, white because a mask reads luminance, and it is the
+   stroke-dashoffset on this that slides rather than anything on the dots
+   themselves.
+*/
+.turningMask {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 10;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 520ms var(--ease-out);
+}
+
+.stops {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stop {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 92px minmax(0, 1fr);
+  align-items: start;
+  padding: 18px 0;
+}
+
+/* The node hugs the card it belongs to rather than sitting dead centre, so as
+   the cards alternate sides the line has to weave between them. That weave is
+   the whole reason the stops alternate at all. */
+.dotCell {
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  justify-content: flex-start;
+  padding-top: 30px;
+}
+
+.flip .dotCell {
+  justify-content: flex-end;
+}
+
+.card {
+  grid-column: 1;
+  grid-row: 1;
+  display: grid;
+  gap: 10px;
+  align-content: start;
+  padding: 24px 24px 26px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+}
+
+.branchCell {
+  grid-column: 3;
+  grid-row: 1;
+  display: grid;
+  gap: 14px;
+  align-content: start;
+  padding-top: 22px;
+}
+
+/* Every other stop swaps sides. The rail then has a reason to bend, and the
+   page stops looking like a column of boxes. */
+.flip .card {
+  grid-column: 3;
+}
+
+.flip .branchCell {
+  grid-column: 1;
+}
+
+.num {
+  font-family: var(--font-display);
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  color: var(--accent);
+}
+
+.stopTitle {
+  font-size: 1.2rem;
+}
+
+.stopBody {
+  color: var(--ink-2);
+  font-size: 14.5px;
+  line-height: 1.62;
+}
+
+.stopLink {
+  justify-self: start;
+  margin-top: 2px;
+  font-size: 13px;
+  color: var(--accent);
+  border-bottom: 1px solid transparent;
+  transition: border-color 160ms var(--ease-out);
+}
+
+.stopLink:hover {
+  border-color: var(--accent);
+}
+
+/* ---------------------------------------------------------------------------
+   Arriving
+
+   The hidden state lives behind .armed, which only exists once JS has decided
+   it can watch for the reveal. No JS, no IntersectionObserver or reduced
+   motion, and none of these rules apply: the section is text that is simply
+   there. Content must never need a script to become visible.
+   --------------------------------------------------------------------------- */
+
+.armed [data-reveal] {
+  opacity: 0;
+  translate: 0 16px;
+  transition:
+    opacity 420ms var(--ease-out),
+    translate 420ms var(--ease-out);
+}
+
+.armed [data-reveal].shown {
+  opacity: 1;
+  translate: 0 0;
+}
+
+/* The node lights up as the line arrives at it. */
+.armed .node {
+  border-color: var(--line-2);
+  transition: border-color 300ms var(--ease-out), background 300ms var(--ease-out);
+}
+
+.armed .node.shown {
+  border-color: var(--accent);
+}
+
+/* A branch waits for its own turning to be drawn before it lands, so the order
+   reads as one thing: line reaches the stop, turning goes out, card arrives. */
+.armed .branch[data-reveal] {
+  transition-delay: 300ms;
+}
+
+.armed .branch[data-reveal]:nth-child(2) {
+  transition-delay: 420ms;
+}
+
+/* ---------------------------------------------------------------------------
+   Branches: optional, and dressed as optional
+   --------------------------------------------------------------------------- */
+
+.branch {
+  display: grid;
+  gap: 7px;
+  align-content: start;
+  padding: 18px 20px 20px;
+  border: 1px dashed var(--line-2);
+  border-radius: var(--r);
+  background: rgba(26, 23, 21, 0.5);
+  transition:
+    border-color 200ms var(--ease-out),
+    background 200ms var(--ease-out);
+}
+
+.branch:hover {
+  border-color: rgba(201, 162, 39, 0.45);
+  background: var(--bg-2);
+}
+
+.branchKicker {
+  font-size: 10.5px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.branchTitle {
+  font-family: var(--font-display);
+  font-size: 1.02rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.branchBody {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+
+.branchLink {
+  justify-self: start;
+  margin-top: 2px;
+  font-size: 12.5px;
+  color: var(--accent);
+  border-bottom: 1px solid transparent;
+  transition: border-color 160ms var(--ease-out);
+}
+
+.branchLink:hover {
+  border-color: var(--accent);
+}
+
+/* ---------------------------------------------------------------------------
+   Nodes, and the two ends of the line
+   --------------------------------------------------------------------------- */
+
+.node {
+  position: relative;
+  z-index: 1;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 2px solid var(--accent);
+  box-shadow: 0 0 0 5px var(--bg-2);
+}
+
+.nodeStart {
+  background: var(--accent);
+}
+
+.nodeEnd {
+  background: var(--ember);
+  border-color: var(--ember-2);
+}
+
+.marker {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 92px minmax(0, 1fr);
+  align-items: center;
+}
+
+.marker .node {
+  grid-column: 2;
+  justify-self: center;
+}
+
+.markerText {
+  grid-column: 3;
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.markerLast .markerText {
+  color: var(--ember-2);
+}
+
+/* ---------------------------------------------------------------------------
+   Narrow
+
+   The rail moves to the left edge and everything queues up beside it, so a stop
+   and its branches read as one thing. The line is measured, so it follows
+   without being told.
+   --------------------------------------------------------------------------- */
+
+@media (max-width: 900px) {
+  .inner {
+    padding: 60px 20px 72px;
+  }
+
+  .heading {
+    margin-bottom: 30px;
+  }
+
+  .stop,
+  .marker {
+    grid-template-columns: 34px minmax(0, 1fr);
+  }
+
+  .stop {
+    padding: 14px 0;
+  }
+
+  .dotCell,
+  .flip .dotCell {
+    grid-column: 1;
+    justify-content: flex-start;
+    padding-top: 26px;
+  }
+
+  .card,
+  .flip .card,
+  .branchCell,
+  .flip .branchCell {
+    grid-column: 2;
+  }
+
+  .card {
+    grid-row: 1;
+  }
+
+  /* Branches drop underneath the stop they belong to rather than beside it, and
+     step in, so the indent does the job the dashed line does on a wide screen. */
+  .branchCell {
+    grid-row: 2;
+    padding: 14px 0 0 18px;
+  }
+
+  .marker .node {
+    grid-column: 1;
+    justify-self: start;
+  }
+
+  .markerText {
+    grid-column: 2;
+  }
+}

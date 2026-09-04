@@ -1,0 +1,417 @@
+rules_version = '2';
+
+/*
+  Quests & Fables, Firestore security rules.
+
+  README rule 6 was written for Supabase and says: write every policy in the
+  same migration as its table, because a missing policy is a public data leak.
+  Firestore is worse in one specific way, so the rule is stricter here. Postgres
+  denies by default until you grant; Firestore denies by default too, but a
+  single over-broad `match /{document=**}` written by somebody in a hurry opens
+  the entire database. There is exactly one wildcard in this file and it is the
+  final deny.
+
+  What this file protects:
+
+  1. **A profile is readable by its owner and nobody else.** It holds a phone
+     number and where somebody lives. There is no public profile document yet,
+     and when there is one it will be a separate collection with the private
+     fields left out, never a rule that relaxes this one.
+
+  2. **A username is claimed once and cannot be edited.** `usernames/{lower}`
+     is a lock: creatable only by the person taking it, never updatable,
+     never deletable through the client. Creating a profile requires holding the
+     matching lock in the same transaction, so the lock cannot be bypassed by
+     writing a profile on its own.
+
+  3. **The party's record and the game master's book are one collection with
+     two audiences.** Players write the first and cannot read the second; the
+     game master reads both and writes only their own. Enforced on every note.
+
+  4. **Five characters, enforced here rather than trusted from the client.**
+     Rules cannot count a collection, so the count is a field on the profile and
+     `getAfter()` checks that a character create and its counter increment
+     happen in the same batch. Try the create on its own and it fails.
+
+  Test with the emulator before touching production:
+      firebase emulators:start --only firestore
+*/
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    /*
+      An admin is a custom claim on the account, set with the Admin SDK from a
+      script somebody runs on their own machine. It cannot be granted from a
+      browser, it is not a field in this database, and nothing a player can
+      write reaches it.
+
+      Note what admin does and does not buy. It reads profiles, because running
+      this means calling players and putting parties together. It does not read
+      a party's notebook. Rule 9 has no admin exception: the record is the
+      table's, and whoever runs the service is not at the table.
+    */
+    function isAdmin() {
+      return signedIn() && request.auth.token.admin == true;
+    }
+
+    /*
+      The seven day clock on an unconfirmed address.
+
+      A password signup cannot prove the email, so a new account runs on trust
+      for a week and is then held: it still reads, and it writes nothing until
+      the link is followed. Enforced here rather than only on screen, because a
+      rule that lives in a component is a suggestion.
+
+      `email_verified` is a claim on the token and nothing in this database can
+      set it. 604800000 is seven days in milliseconds.
+    */
+    function verified() {
+      return request.auth.token.email_verified == true;
+    }
+
+    function inGoodStanding(uid) {
+      return verified()
+             || request.time.toMillis() < profileNow(uid).createdAt + 604800000;
+    }
+
+    function profileNow(uid) {
+      return get(/databases/$(database)/documents/profiles/$(uid)).data;
+    }
+
+    function profileAfter(uid) {
+      return getAfter(/databases/$(database)/documents/profiles/$(uid)).data;
+    }
+
+    /* ---- usernames: a lock, not a record ---------------------------------
+       The document id is the lowercased username. Its existence is what makes
+       the name taken. Creating one is how you claim it, and there is no path
+       that lets you release or steal one from the client.
+       -------------------------------------------------------------------- */
+    match /usernames/{name} {
+      // Readable so the sign-up form can say "taken" before you submit.
+      allow read: if true;
+
+      allow create: if isOwner(request.resource.data.uid)
+                    && request.resource.data.keys().hasOnly(['uid'])
+                    && name.size() >= 3
+                    && name.size() <= 20
+                    && name.matches('^[a-z0-9_]+$');
+
+      allow update, delete: if false;
+    }
+
+    /* ---- profiles: private, and the username is immutable ---------------- */
+    match /profiles/{uid} {
+      // The owner, and whoever runs the service. A phone number is on this
+      // document, so this is the widest read in the file and it is deliberate:
+      // a party cannot be assembled by somebody who cannot see who is waiting.
+      allow read: if isOwner(uid) || isAdmin();
+
+      allow create: if isOwner(uid)
+                    && request.resource.data.uid == uid
+                    && request.resource.data.username is string
+                    && request.resource.data.username.matches('^[a-z0-9_]{3,20}$')
+                    && request.resource.data.email is string
+                    && request.resource.data.phone is string
+                    && request.resource.data.area is string
+                    && request.resource.data.characterCount == 0
+                    // Thirteen years in milliseconds, near enough. The floor is
+                    // for holding an account; the in-person age policy is a
+                    // separate and still open question.
+                    && request.resource.data.dob is int
+                    && request.time.toMillis() - request.resource.data.dob >= 410000000000
+                    && request.resource.data.week is list
+                    && request.resource.data.week.size() == 7
+                    // The lock and the profile are one act. Without this, the
+                    // profile create never consults usernames/ at all, and a
+                    // second player could write a profile carrying a name
+                    // somebody else holds — the lock would be intact and the
+                    // uniqueness it exists for would not.
+                    && getAfter(
+                         /databases/$(database)/documents/usernames/$(request.resource.data.username)
+                       ).data.uid == uid;
+
+      allow update: if (isOwner(uid) || isAdmin())
+                    // The seven day clock. Written out rather than calling
+                    // inGoodStanding(), because on an update the profile is
+                    // already in hand and there is no sense paying for a get()
+                    // to read a field sitting right there.
+                    && (isAdmin()
+                        || verified()
+                        || request.time.toMillis() < resource.data.createdAt + 604800000)
+                    // Permanent, and not by accident: the request has to carry
+                    // the same username it already had.
+                    && request.resource.data.username == resource.data.username
+                    // A mistyped birthday is an admin's job to fix, not a thing
+                    // to be edited quietly on the way into an adults-only table.
+                    // get() with a default, so a profile written before dates of
+                    // birth existed does not make this rule throw.
+                    && (isAdmin()
+                        || request.resource.data.get('dob', 0)
+                           == resource.data.get('dob', 0))
+                    // Only an admin marks somebody a game master. They are
+                    // recruited and met in person; self-promotion is not a
+                    // route into other people's evenings.
+                    && (isAdmin() || request.resource.data.get('gm', false)
+                                     == resource.data.get('gm', false))
+                    && request.resource.data.uid == resource.data.uid
+                    // The counter is the limit's only enforcement point, so it
+                    // may only ever move by one, and only inside the range.
+                    && request.resource.data.characterCount >= 0
+                    && request.resource.data.characterCount <= 5
+                    && (
+                         request.resource.data.characterCount == resource.data.characterCount
+                         || request.resource.data.characterCount == resource.data.characterCount + 1
+                         || request.resource.data.characterCount == resource.data.characterCount - 1
+                       );
+
+      // Deleting an account is a real operation with real cleanup behind it,
+      // so it does not happen from a browser. It will be a callable function.
+      allow delete: if false;
+
+      /* ---- characters: five, and the count has to agree ------------------
+         A create is only allowed when the profile's counter goes up by one in
+         the same batch, and a delete only when it goes down by one. That is
+         what makes the limit real rather than a number the form checks.
+         ------------------------------------------------------------------ */
+      match /characters/{characterId} {
+        allow read: if isOwner(uid);
+
+        allow create: if isOwner(uid)
+                      && inGoodStanding(uid)
+                      && request.resource.data.ownerId == uid
+                      && request.resource.data.name is string
+                      && request.resource.data.name.size() > 0
+                      && request.resource.data.name.size() <= 60
+                      && request.resource.data.kind in ['srd', 'custom']
+                      && profileNow(uid).characterCount < 5
+                      && profileAfter(uid).characterCount == profileNow(uid).characterCount + 1;
+
+        allow update: if isOwner(uid)
+                      && request.resource.data.ownerId == uid
+                      && request.resource.data.kind == resource.data.kind;
+
+        allow delete: if isOwner(uid)
+                      && profileAfter(uid).characterCount == profileNow(uid).characterCount - 1;
+      }
+    }
+
+    /* ---- parties, and the notebook under them ----------------------------
+       Two books under one session, and the difference between them is the
+       whole feature:
+
+         book == 'party'  every player writes, the game master only reads
+         book == 'gm'     the game master alone, and players cannot read it
+
+       The party's record is theirs. A game master who could edit it could
+       quietly correct what the table believes happened, and what the table
+       believes happened is the only thing the record is for. Their own book is
+       the other half of the bargain: somewhere to write down the thing the
+       party has not worked out yet.
+
+       Note the read rule on notes. Firestore rules are not filters — a query
+       is allowed only if the rules can see it cannot return a forbidden
+       document, which is why every read here goes through a query carrying
+       'where book == ...' and why players are refused the whole collection
+       unless they ask for the party book by name.
+       -------------------------------------------------------------------- */
+    match /parties/{partyId} {
+
+      function member() {
+        return get(/databases/$(database)/documents/parties/$(partyId)/members/$(request.auth.uid)).data;
+      }
+
+      function memberRole() {
+        return signedIn() ? member().role : '';
+      }
+
+      /*
+        A party is assembled by whoever runs the service, not by its players.
+        Game masters are recruited and met in person (see the README), and a
+        party of the wrong size or with a stranger's game master is not a thing
+        a browser should be able to make.
+
+        The size limits are here rather than only in the console, because the
+        console is a form and a form is a suggestion. README rule 7: four to
+        six, and the game master is not one of them.
+      */
+      /*
+        Readable by anybody at all, signed in or not.
+
+        This is not laziness, it is the product: the homepage promises you can
+        browse every open table without an account, and `signedIn()` here would
+        have made that promise false the moment the rules were deployed. Caught
+        by pointing the finished site at the real database and watching a
+        signed-out visitor get "Missing or insufficient permissions".
+
+        The price is that this document is public, so what may live on it is
+        strictly limited: a name, an area, a status, opaque uids, an hour, and
+        the `profile` aggregate. No phone numbers, no addresses, nothing
+        belonging to one member. The aggregate exists precisely so a table can
+        say what hours it shares and what it will not play through without
+        saying which of the four said so. The group chat link is one document
+        deeper, in secrets/, for the same reason.
+
+        What that means for what may live on this document: no phone numbers,
+        no addresses, and nothing belonging to one member. The `profile` field
+        is a deliberate aggregate for exactly this reason — it says what hours
+        this table shares and what it will not play through, and never which of
+        the four said so. The group chat link moved to secrets/ below on the
+        same argument: rules cannot hide one field of a readable document.
+      */
+      allow read: if true;
+
+      allow create: if isAdmin()
+                    && request.resource.data.playerIds is list
+                    && request.resource.data.playerIds.size() <= 6
+                    && request.resource.data.name is string
+                    && request.resource.data.name.size() > 0
+                    && request.resource.data.name.size() <= 60
+                    && request.resource.data.area is string
+                    && request.resource.data.status in ['forming', 'assigned', 'playing', 'closed'];
+
+      allow update: if isAdmin()
+                    && request.resource.data.playerIds is list
+                    && request.resource.data.playerIds.size() <= 6
+                    // A game master may only be attached to a party that is
+                    // actually a party. Four is the floor and it is a rule.
+                    && (request.resource.data.gmId == null
+                        || request.resource.data.playerIds.size() >= 4)
+                    // The game master is never one of the players.
+                    && !(request.resource.data.gmId in request.resource.data.playerIds);
+
+      allow delete: if false;
+
+      match /members/{uid} {
+        allow read: if memberRole() in ['player', 'gm'] || isAdmin();
+        allow write: if isAdmin();
+      }
+
+      /* ---- sheets brought to the table ------------------------------------
+         A member's character, copied here so the rest of the table can see it.
+         Yours to bring and yours to take back; readable by everybody at this
+         table and nobody else.
+
+         This is why the characters on a profile never needed a wider read rule.
+         A game master does not reach into your account: you hand them a copy.
+         -------------------------------------------------------------------- */
+      match /sheets/{uid} {
+        allow read: if memberRole() in ['player', 'gm'];
+
+        allow write: if request.auth.uid == uid
+                     && inGoodStanding(uid)
+                     && memberRole() in ['player', 'gm']
+                     && (request.method == 'delete'
+                         || request.resource.data.ownerId == uid);
+      }
+
+      /* ---- the group chat, and anything else that is a key ---------------
+         An invite link lets whoever holds it walk into the conversation, so it
+         is not on the party document that everybody can read. Members only.
+         -------------------------------------------------------------------- */
+      match /secrets/{document} {
+        allow read: if memberRole() in ['player', 'gm'] || isAdmin();
+        allow write: if isAdmin();
+      }
+
+      // Note there is no admin clause from here down. Rule 9 has no exception:
+      // the record belongs to the table, and whoever runs the service is not
+      // at it. An admin can see that a party exists and who is in it. What was
+      // said on a Thursday night is none of their business.
+      match /sessions/{sessionId} {
+        allow read: if memberRole() in ['player', 'gm'];
+
+        // A session is opened and closed by the game master running it.
+        allow create, update: if memberRole() == 'gm'
+                              && request.resource.data.number is int
+                              && request.resource.data.title is string
+                              && request.resource.data.title.size() <= 80
+                              && request.resource.data.open is bool;
+
+        allow delete: if false;
+
+        match /notes/{noteId} {
+          // A player may only ever see the party's book. The game master sees
+          // both, because they read the record and keep their own.
+          allow read: if memberRole() == 'gm'
+                      || (memberRole() == 'player' && resource.data.book == 'party');
+
+          allow create: if signedIn()
+                        && inGoodStanding(request.auth.uid)
+                        && request.resource.data.authorId == request.auth.uid
+                        && request.resource.data.body is string
+                        && request.resource.data.body.size() > 0
+                        && request.resource.data.body.size() <= 2000
+                        && request.resource.data.kind in ['note', 'npc', 'place', 'loot', 'question']
+                        && request.resource.data.book in ['party', 'gm']
+                        && (
+                             // Players write the record; the game master cannot.
+                             (request.resource.data.book == 'party' && memberRole() == 'player')
+                             // The other book has exactly one author.
+                             || (request.resource.data.book == 'gm' && memberRole() == 'gm')
+                           );
+
+          // Your own line, and never anybody else's. The book a note is in
+          // cannot change, or a game master note could be moved into the
+          // party's record after the fact.
+          allow update: if resource.data.authorId == request.auth.uid
+                        && request.resource.data.authorId == resource.data.authorId
+                        && request.resource.data.book == resource.data.book
+                        && request.resource.data.body.size() > 0
+                        && request.resource.data.body.size() <= 2000;
+
+          // Deleting somebody else's note is a moderation action, not a game
+          // master power, and moderation does not happen from a browser.
+          allow delete: if resource.data.authorId == request.auth.uid;
+        }
+      }
+    }
+
+    /* ---- seat requests ---------------------------------------------------
+       A player asking for a seat at a table they can see. Theirs to make and
+       theirs to withdraw; nobody else's to read.
+
+       Deliberately top level rather than under the party. A player needs "what
+       have I asked for", which is a query across parties, and the alternative
+       is a collection group query — which needs a match /{path=**} rule, the
+       database-wide wildcard this file opens by refusing to have.
+       -------------------------------------------------------------------- */
+    match /seatRequests/{requestId} {
+      allow read: if isAdmin()
+                  || (signedIn() && resource.data.playerId == request.auth.uid);
+
+      allow create: if signedIn()
+                    && inGoodStanding(request.auth.uid)
+                    && request.resource.data.playerId == request.auth.uid
+                    && request.resource.data.partyId is string
+                    && request.resource.data.status == 'waiting'
+                    && request.resource.data.note is string
+                    && request.resource.data.note.size() <= 500;
+
+      // Answering a request is the service's job, not the asker's. A player
+      // who changes their mind withdraws it instead.
+      allow update: if isAdmin();
+
+      allow delete: if isAdmin()
+                    || (signedIn() && resource.data.playerId == request.auth.uid);
+    }
+
+    /* ---- everything else ------------------------------------------------
+       Everything the product does not have yet. Until each collection arrives
+       with its own rules written beside it, nothing else in this database is
+       reachable from a browser.
+       -------------------------------------------------------------------- */
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

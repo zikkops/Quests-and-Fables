@@ -1,0 +1,156 @@
+/* =========================================================================
+   Quests & Fables: design tokens
+   Dark by default: this audience plays at night.
+   Every colour is a custom property. Sheet themes are a planned cosmetic
+   revenue line, so nothing hardcodes a hex outside this block.
+   ========================================================================= */
+
+:root {
+  /* Surfaces: warm near-black, lit like a table with a lamp over it */
+  --bg: #12100f;
+  --bg-2: #1a1715;
+  --bg-3: #232019;
+  --line: #332e27;
+  --line-2: #464036;
+
+  /* Ink */
+  --ink: #f0e9df;
+  --ink-2: #a89f92;
+  --ink-3: #736a5e;
+
+  /* Accent: old gold. Matches the character-builder prototype exactly. */
+  --accent: #c9a227;
+  --accent-2: #e0bf4e;
+  --accent-ink: #1a1512;
+
+  /* Ember: the second hero line, and anything that should feel lit */
+  --ember: #e2703a;
+  --ember-2: #f08a4b;
+
+  --ok: #6fbf73;
+  --warn: #d9a13b;
+  --err: #d1584f;
+
+  /* Geometry */
+  /* The nav sits in normal flow above the hero, and the hero is one screen
+     minus the nav. Both read this, so the two cannot drift apart. */
+  --nav-h: 85px;
+
+  --r: 10px;
+  --r-lg: 16px;
+  --maxw: 1240px;
+
+  /* Type */
+  --font-display: var(--font-cinzel), "Iowan Old Style", Palatino, Georgia, serif;
+  --font-body: var(--font-inter), ui-sans-serif, system-ui, -apple-system, sans-serif;
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* -----------------------------------------------------------------------
+     EYE CALIBRATION
+     Position only. Timing and behaviour live in src/lib/eye.ts. Keep the
+     split, it is what makes the eye tunable without touching logic.
+
+     In dev, press C for a calibration ruler with arrow-key nudging. Nudge
+     until the ellipse sits on the iris, then paste the values back here.
+     All values are % of the eye frame unless noted.
+     ----------------------------------------------------------------------- */
+  /* The photo's own aspect ratio. The stage carries it so that every
+     percentage below stays true at any viewport width. */
+  --eye-aspect: 641 / 360;
+
+  --eye-img-x: 50%;        /* object-position X */
+  --eye-img-y: 50%;        /* object-position Y */
+
+  /* Measured off public/assets/dragon-eye.jpg, not guessed: the iris is the
+     only large warm, bright region in the frame, so thresholding for it and
+     taking the 3rd to 97th percentile on each axis finds it exactly. The
+     percentiles keep the stray glints on the horn out of the answer.
+
+     Measured iris: centre 50.31% / 49.72%, radius 14.90% / 20.83%. */
+  --iris-cx: 50.31%;       /* iris centre, X */
+  --iris-cy: 49.72%;       /* iris centre, Y */
+
+  /* The moving window sits well inside the measured iris. If it reached the
+     rim, sliding it would drag the sclera and the scales into view. */
+  --iris-rx: 7.53%;
+  --iris-ry: 12.8%;
+
+  --gaze-range-x: 3.2%;    /* how far the iris may travel from centre */
+  --gaze-range-y: 2.2%;    /* smaller, because eyes scan horizontally */
+
+  --lid-meet: 49.72%;      /* the line the two lids meet on: the iris centre */
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden; /* the hero glows bleed; never let them cause a scrollbar */
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.08;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+p {
+  margin: 0;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+/* Focus rings are visible and gold. Never remove them: the builder has to be
+   fully keyboard navigable and this is half of that promise. */
+:focus-visible {
+  outline: 2px solid var(--accent-2);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+/* A hero built entirely from motion is exactly the case where ignoring this
+   setting hurts. The eye renders open and still, no embers, no parallax. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

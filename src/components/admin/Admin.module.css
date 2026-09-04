@@ -1,0 +1,481 @@
+/* ---------------------------------------------------------------------------
+   The admin console.
+
+   Denser than the rest of the site on purpose. Every other page is read by
+   somebody deciding whether to trust us; this one is read by somebody working,
+   and work wants a table.
+   --------------------------------------------------------------------------- */
+
+.card {
+  display: grid;
+  gap: 14px;
+  padding: 22px 22px 24px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+}
+
+.head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.cardTitle {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  color: var(--ink);
+}
+
+.tally {
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  color: var(--ink-3);
+}
+
+.body {
+  font-size: 14.5px;
+  line-height: 1.62;
+  color: var(--ink-2);
+  max-width: 74ch;
+}
+
+.quiet {
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+
+.hint {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink-3);
+}
+
+.label {
+  font-size: 10.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.error {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--err);
+  border-left: 2px solid var(--err);
+  padding-left: 10px;
+}
+
+.hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+/* The page opens on a reminder of what is on it. Ember, like every other
+   page here that is about people rather than features. */
+.warning {
+  display: grid;
+  gap: 7px;
+  padding: 16px 18px 17px;
+  border: 1px solid color-mix(in srgb, var(--ember) 40%, transparent);
+  border-radius: var(--r);
+  background: color-mix(in srgb, var(--ember) 7%, transparent);
+}
+
+.warningTitle {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ember-2);
+}
+
+/* ---- controls ------------------------------------------------------------ */
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.input,
+.select {
+  font: inherit;
+  font-size: 14px;
+  min-width: 0;
+  color: var(--ink);
+  background: var(--bg);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  padding: 9px 12px;
+  transition: border-color 160ms var(--ease-out);
+}
+
+.input {
+  flex: 1 1 240px;
+}
+
+.input:focus,
+.select:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
+.field {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  /* Without this, a field whose hint is missing stretches its control to fill
+     the row and sits a head taller than its neighbours. */
+  align-content: start;
+}
+
+.primary,
+.secondary {
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  border-radius: var(--r);
+  padding: 9px 16px;
+  cursor: pointer;
+  transition:
+    background 160ms var(--ease-out),
+    border-color 160ms var(--ease-out),
+    color 160ms var(--ease-out);
+}
+
+.primary {
+  color: var(--accent-ink);
+  background: var(--accent);
+  border: 1px solid transparent;
+}
+
+.primary:hover:not(:disabled) {
+  background: var(--accent-2);
+}
+
+.primary:disabled {
+  color: var(--ink-3);
+  background: var(--bg-3);
+  cursor: default;
+}
+
+.secondary {
+  color: var(--ink);
+  background: transparent;
+  border: 1px solid var(--line-2);
+}
+
+.secondary:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.secondary:disabled {
+  color: var(--ink-3);
+  cursor: default;
+}
+
+/* ---- the table ----------------------------------------------------------- */
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+  white-space: nowrap;
+}
+
+.table th {
+  text-align: left;
+  font-size: 10.5px;
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  padding: 0 12px 8px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.table td {
+  color: var(--ink-2);
+  padding: 9px 12px 9px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.picked td {
+  background: color-mix(in srgb, var(--accent) 9%, transparent);
+}
+
+.tick {
+  width: 28px;
+  padding-right: 0;
+}
+
+.name {
+  font-family: var(--font-display);
+  font-size: 14.5px;
+  color: var(--ink);
+}
+
+.areas {
+  max-width: 26ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.phone {
+  color: var(--accent-2);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Masked until asked for. This is the one screen that can show two hundred
+   phone numbers at once, and it is the kind people photograph. */
+.masked {
+  font: inherit;
+  font-size: 13px;
+  color: var(--ink-3);
+  background: transparent;
+  border: 1px dashed var(--line-2);
+  border-radius: 7px;
+  padding: 2px 9px;
+  cursor: pointer;
+}
+
+.masked:hover {
+  color: var(--ink);
+  border-color: var(--accent);
+}
+
+.gm {
+  font: inherit;
+  font-size: 11.5px;
+  color: var(--ink-3);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 3px 11px;
+  cursor: pointer;
+}
+
+.gm:hover {
+  border-color: var(--line-2);
+  color: var(--ink-2);
+}
+
+.gmOn {
+  color: var(--accent-2);
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+/* ---- the selection tray -------------------------------------------------- */
+
+.tray {
+  display: grid;
+  gap: 10px;
+  padding: 16px 18px 17px;
+  border: 1px dashed var(--line-2);
+  border-radius: var(--r);
+  background: rgba(18, 16, 15, 0.5);
+}
+
+.trayHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.trayTitle {
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent-2);
+}
+
+.picks {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+
+.overlap {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--ok);
+}
+
+/* Four people with no hour in common are not a party. Said loudly. */
+.noOverlap {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--err);
+  border-left: 2px solid var(--err);
+  padding-left: 10px;
+}
+
+.trayForm {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* ---- parties ------------------------------------------------------------- */
+
+.parties {
+  display: grid;
+  gap: 12px;
+}
+
+.party {
+  display: grid;
+  gap: 12px;
+  padding: 16px 18px 18px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+}
+
+.partyHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.partyName {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  color: var(--ink);
+}
+
+.status {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  border: 1px solid;
+  border-radius: 999px;
+  padding: 2px 9px;
+}
+
+.status[data-status="forming"] {
+  color: var(--ink-3);
+  border-color: var(--line-2);
+}
+
+.status[data-status="assigned"] {
+  color: var(--accent-2);
+  border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+}
+
+.status[data-status="playing"] {
+  color: var(--ok);
+  border-color: color-mix(in srgb, var(--ok) 45%, transparent);
+}
+
+.status[data-status="closed"] {
+  color: var(--ink-3);
+  border-color: var(--line);
+}
+
+.partyRow {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.chat {
+  display: grid;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.chatRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.chatLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.chatLink {
+  font-size: 12px;
+  color: var(--ink-2);
+  border: 1px solid var(--line-2);
+  border-radius: 999px;
+  padding: 3px 10px;
+  text-decoration: none;
+}
+
+.chatLink:hover {
+  border-color: var(--ok);
+  color: var(--ok);
+}
+
+@media (max-width: 760px) {
+  .partyRow {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ---- people asking for a seat -------------------------------------------- */
+
+.requests {
+  display: grid;
+  gap: 10px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.request {
+  display: grid;
+  gap: 9px;
+  padding: 15px 17px 16px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+}
+
+.requestHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.note {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--ink-2);
+  border-left: 2px solid var(--line-2);
+  padding-left: 12px;
+  max-width: 74ch;
+}
+
+.rowActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}

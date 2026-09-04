@@ -1,0 +1,116 @@
+.section {
+  position: relative;
+  border-top: 1px solid var(--line);
+  background: var(--bg);
+}
+
+.inner {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 78px 28px 84px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 340px);
+  gap: 56px;
+  align-items: center;
+}
+
+.copy {
+  display: grid;
+  gap: 14px;
+  max-width: 52ch;
+}
+
+.kicker {
+  font-size: 11.5px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.title {
+  font-size: clamp(1.7rem, 3vw, 2.35rem);
+}
+
+.sub {
+  color: var(--ink-2);
+  font-size: 1rem;
+}
+
+.venues {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+}
+
+.venue {
+  font-size: 12.5px;
+  color: var(--ink-2);
+  border: 1px solid var(--line-2);
+  border-radius: 999px;
+  padding: 5px 12px;
+  background: var(--bg-2);
+}
+
+.venueNote {
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+.actions {
+  display: grid;
+  gap: 16px;
+  justify-items: start;
+  margin-top: 10px;
+  border-top: 1px solid var(--line);
+  padding-top: 22px;
+}
+
+.cta {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--accent-ink);
+  background: var(--accent);
+  border-radius: var(--r);
+  padding: 12px 20px;
+  transition: background 160ms var(--ease-out);
+}
+
+.cta:hover {
+  background: var(--accent-2);
+}
+
+.cta:focus-visible {
+  outline: 2px solid var(--accent-2);
+  outline-offset: 3px;
+}
+
+.away {
+  font-size: 13px;
+  color: var(--ink-2);
+  max-width: 46ch;
+}
+
+.awayLink {
+  color: var(--accent);
+  border-bottom: 1px solid transparent;
+  transition: border-color 160ms var(--ease-out);
+}
+
+.awayLink:hover {
+  border-color: var(--accent);
+}
+
+@media (max-width: 900px) {
+  .inner {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 34px;
+    padding: 58px 20px 64px;
+  }
+
+  .map {
+    justify-self: center;
+  }
+}

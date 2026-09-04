@@ -1,0 +1,555 @@
+/* ---------------------------------------------------------------------------
+   The table's notebook.
+
+   A rail of sessions and a page of entries, which is what a notebook is. The
+   search bar sits above both because it searches across them: typing in it
+   replaces the page with results and turns the rail into a tally of where the
+   matches are.
+   --------------------------------------------------------------------------- */
+
+.shell {
+  display: grid;
+  gap: 0;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+}
+
+/* ---- the bar ------------------------------------------------------------- */
+
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--line);
+  background: linear-gradient(var(--bg-3), var(--bg-2));
+}
+
+.searchWrap {
+  display: grid;
+  gap: 6px;
+  flex: 1 1 320px;
+}
+
+.searchLabel {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.search {
+  font: inherit;
+  font-size: 15px;
+  width: 100%;
+  min-width: 0;
+  color: var(--ink);
+  background: var(--bg);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  padding: 10px 13px;
+  transition: border-color 160ms var(--ease-out);
+}
+
+.search:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.books {
+  display: flex;
+  gap: 6px;
+}
+
+.book {
+  position: relative;
+  font: inherit;
+  font-size: 12.5px;
+  color: var(--ink-2);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 8px 15px;
+  cursor: pointer;
+  transition:
+    background 140ms var(--ease-out),
+    border-color 140ms var(--ease-out),
+    color 140ms var(--ease-out);
+}
+
+.book:hover {
+  border-color: var(--line-2);
+  color: var(--ink);
+}
+
+.bookOn {
+  background: color-mix(in srgb, var(--accent) 18%, var(--bg-2));
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  color: var(--accent-2);
+}
+
+/* Matches waiting in the book you are not looking at. */
+.bookCount {
+  margin-left: 7px;
+  font-size: 10.5px;
+  color: var(--accent-ink);
+  background: var(--accent);
+  border-radius: 999px;
+  padding: 1px 6px;
+}
+
+.only {
+  font-size: 12px;
+  color: var(--ink-3);
+  max-width: 30ch;
+}
+
+/* ---- the recurring terms ------------------------------------------------- */
+
+.terms {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--line);
+}
+
+.termsLabel {
+  font-size: 10.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-right: 4px;
+}
+
+.term {
+  font: inherit;
+  font-size: 12px;
+  color: var(--ink-2);
+  background: transparent;
+  border: 1px dashed var(--line-2);
+  border-radius: 999px;
+  padding: 4px 11px;
+  cursor: pointer;
+  transition:
+    border-color 140ms var(--ease-out),
+    color 140ms var(--ease-out);
+}
+
+.term:hover {
+  border-color: var(--accent);
+  color: var(--accent-2);
+}
+
+/* ---- the two columns ----------------------------------------------------- */
+
+.body {
+  display: grid;
+  grid-template-columns: 232px minmax(0, 1fr);
+  align-items: start;
+}
+
+.rail {
+  display: grid;
+  gap: 2px;
+  padding: 12px;
+  border-right: 1px solid var(--line);
+  background: rgba(18, 16, 15, 0.5);
+}
+
+.session {
+  display: grid;
+  gap: 3px;
+  justify-items: start;
+  text-align: left;
+  font: inherit;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--r);
+  padding: 10px 12px;
+  cursor: pointer;
+  transition:
+    background 140ms var(--ease-out),
+    border-color 140ms var(--ease-out);
+}
+
+.session:hover {
+  background: var(--bg-2);
+  border-color: var(--line);
+}
+
+.sessionOn {
+  background: var(--bg-2);
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.sessionNumber {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.sessionOn .sessionNumber {
+  color: var(--accent-2);
+}
+
+/* The night currently being played. Green, like the live areas on the map. */
+.live {
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: var(--ok);
+  border: 1px solid color-mix(in srgb, var(--ok) 45%, transparent);
+  border-radius: 999px;
+  padding: 1px 6px;
+}
+
+.sessionTitle {
+  font-family: var(--font-display);
+  font-size: 14.5px;
+  color: var(--ink);
+}
+
+.sessionMeta {
+  font-size: 11.5px;
+  color: var(--ink-3);
+}
+
+/* ---- the page ------------------------------------------------------------ */
+
+.main {
+  display: grid;
+  gap: 14px;
+  padding: 18px 20px 20px;
+  align-content: start;
+}
+
+.sessionHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.sessionHeading {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  color: var(--ink);
+}
+
+.openTag {
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ok);
+}
+
+.empty {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--ink-3);
+  padding: 8px 0;
+}
+
+.empty strong {
+  color: var(--ink-2);
+}
+
+/* An <ol> keeps its indent even with no markers to indent for. */
+.notes {
+  display: grid;
+  gap: 8px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.note {
+  display: grid;
+  gap: 6px;
+  padding: 13px 15px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+}
+
+.noteHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 9px;
+}
+
+/* One colour per kind, so a page of notes has a shape before it has words. */
+.kind {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  border: 1px solid;
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+.kind[data-kind="note"] {
+  color: var(--ink-3);
+  border-color: var(--line-2);
+}
+
+.kind[data-kind="npc"] {
+  color: var(--accent-2);
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.kind[data-kind="place"] {
+  color: var(--ok);
+  border-color: color-mix(in srgb, var(--ok) 40%, transparent);
+}
+
+.kind[data-kind="loot"] {
+  color: var(--warn);
+  border-color: color-mix(in srgb, var(--warn) 45%, transparent);
+}
+
+.kind[data-kind="question"] {
+  color: var(--ember-2);
+  border-color: color-mix(in srgb, var(--ember) 45%, transparent);
+}
+
+.author {
+  font-family: var(--font-display);
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+
+.remove {
+  margin-left: auto;
+  font: inherit;
+  font-size: 11.5px;
+  color: var(--ink-3);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  padding: 3px 9px;
+  cursor: pointer;
+  transition:
+    border-color 140ms var(--ease-out),
+    color 140ms var(--ease-out);
+}
+
+.remove:hover {
+  color: var(--err);
+  border-color: color-mix(in srgb, var(--err) 45%, transparent);
+}
+
+.text {
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--ink-2);
+}
+
+.mark {
+  background: color-mix(in srgb, var(--accent) 28%, transparent);
+  color: var(--ink);
+  border-radius: 3px;
+  padding: 0 2px;
+}
+
+/* ---- results ------------------------------------------------------------- */
+
+.results {
+  display: grid;
+  gap: 16px;
+}
+
+.resultCount {
+  font-size: 11.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.group {
+  display: grid;
+  gap: 8px;
+}
+
+.groupHead {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  justify-self: start;
+  font-family: var(--font-display);
+  font-size: 13.5px;
+  color: var(--accent-2);
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.groupHead:hover {
+  text-decoration: underline;
+}
+
+.groupCount {
+  font-family: var(--font-body);
+  font-size: 10.5px;
+  color: var(--ink-3);
+  border: 1px solid var(--line-2);
+  border-radius: 999px;
+  padding: 1px 7px;
+}
+
+/* ---- writing ------------------------------------------------------------- */
+
+.locked {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ink-3);
+  border-left: 2px solid var(--line-2);
+  padding: 2px 0 2px 12px;
+  max-width: 68ch;
+}
+
+.composer {
+  display: grid;
+  gap: 9px;
+  padding: 14px 15px 15px;
+  border: 1px dashed var(--line-2);
+  border-radius: var(--r);
+  background: rgba(18, 16, 15, 0.4);
+}
+
+.kinds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.kindPick {
+  font: inherit;
+  font-size: 11.5px;
+  color: var(--ink-3);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 4px 11px;
+  cursor: pointer;
+  transition:
+    border-color 140ms var(--ease-out),
+    color 140ms var(--ease-out);
+}
+
+.kindPick:hover {
+  color: var(--ink-2);
+  border-color: var(--line-2);
+}
+
+.kindOn {
+  color: var(--accent-2);
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.input {
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.6;
+  width: 100%;
+  min-width: 0;
+  resize: vertical;
+  color: var(--ink);
+  background: var(--bg);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  padding: 10px 12px;
+  transition: border-color 160ms var(--ease-out);
+}
+
+.input:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.composerFoot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.tagLine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--ink-3);
+}
+
+.tag {
+  font-size: 11px;
+  color: var(--accent-2);
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  border-radius: 999px;
+  padding: 1px 8px;
+}
+
+.left {
+  color: var(--warn);
+}
+
+.add {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent-ink);
+  background: var(--accent);
+  border: 1px solid transparent;
+  border-radius: var(--r);
+  padding: 9px 16px;
+  cursor: pointer;
+  transition: background 160ms var(--ease-out);
+}
+
+.add:hover:not(:disabled) {
+  background: var(--accent-2);
+}
+
+.add:disabled {
+  color: var(--ink-3);
+  background: var(--bg-3);
+  cursor: default;
+}
+
+/* ---- narrow -------------------------------------------------------------- */
+
+@media (max-width: 780px) {
+  /* The rail becomes a strip along the top: a notebook with a spine down the
+     side needs a width this does not have. */
+  .body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .rail {
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(180px, 1fr);
+    gap: 8px;
+    overflow-x: auto;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .session {
+    border-color: var(--line);
+  }
+}
