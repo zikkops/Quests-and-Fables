@@ -49,3 +49,6 @@ firestore.rules.min
 firestore-debug.log
 ui-debug.log
 firebase-debug.log
+
+# Emulator mode build output
+.next-emulator/

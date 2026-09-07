@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test:rules": "npx --yes firebase-tools@15 emulators:exec --only firestore --project quests-and-fables-rules-test \"node test/rules.mjs\""
+    "test:rules": "npx --yes firebase-tools@15 emulators:exec --only firestore --project quests-and-fables-rules-test \"node test/rules.mjs\"",
+    "dev:emulator": "node scripts/dev-emulator.mjs"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",

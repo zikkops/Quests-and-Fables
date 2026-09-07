@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Cinzel, Inter } from "next/font/google";
 import "./globals.css";
 import { SessionProvider } from "@/lib/firebase/session";
+import EmulatorBadge from "@/components/EmulatorBadge";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -53,6 +54,7 @@ export default function RootLayout({
         {/* Who is signed in, read once and shared. Costs nothing when
             Firebase is unconfigured: the provider answers "nobody" and stops. */}
         <SessionProvider>{children}</SessionProvider>
+        <EmulatorBadge />
       </body>
     </html>
   );

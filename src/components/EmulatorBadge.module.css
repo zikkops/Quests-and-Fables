@@ -1,0 +1,49 @@
+.badge {
+  position: fixed;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  z-index: 999;
+
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  max-width: calc(100vw - 32px);
+
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--bg);
+  background: var(--warn);
+  border-radius: 999px;
+  padding: 8px 16px;
+  box-shadow: 0 10px 30px -12px rgb(0 0 0 / 0.7);
+
+  /* It is a label, not a control. Never let it eat a click. */
+  pointer-events: none;
+}
+
+.dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--bg);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dot {
+    animation: none;
+    opacity: 1;
+  }
+}

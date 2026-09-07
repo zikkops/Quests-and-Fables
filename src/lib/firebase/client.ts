@@ -1,8 +1,8 @@
 "use client";
 
 import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
-import { getAuth, type Auth } from "firebase/auth";
-import { getFirestore, type Firestore } from "firebase/firestore";
+import { connectAuthEmulator, getAuth, type Auth } from "firebase/auth";
+import { connectFirestoreEmulator, getFirestore, type Firestore } from "firebase/firestore";
 
 /**
  * Firebase, initialised lazily and only if it has been configured.
@@ -62,12 +62,41 @@ function firebaseApp(): FirebaseApp | null {
   return app;
 }
 
+/**
+ * Point the SDK at the local emulators instead of the real project.
+ *
+ * Set `NEXT_PUBLIC_FIREBASE_EMULATOR=1` and run `npm run dev:emulator`. Accounts
+ * are throwaway, the database starts empty every time, and nothing you do
+ * touches production.
+ *
+ * That matters more here than in most projects. `firestore.rules` gives a
+ * claimed username no release path from the client, so a single test signup
+ * against the real project burns that name permanently and there is no Admin
+ * SDK to undo it. Testing the real flow was effectively impossible until this
+ * existed.
+ *
+ * The flag is deliberately explicit rather than inferred from `NODE_ENV` or the
+ * hostname. `npm run dev` against real data is a thing people legitimately do,
+ * and quietly redirecting it would be its own kind of trap.
+ */
+const useEmulator = process.env.NEXT_PUBLIC_FIREBASE_EMULATOR === "1";
+
+/* connectAuthEmulator and connectFirestoreEmulator both throw if the instance
+   has already been used, so each is wired exactly once. */
+let authWired = false;
+let dbWired = false;
+
 export function auth(): Auth | null {
   const instance = firebaseApp();
   if (!instance) return null;
 
   try {
-    return getAuth(instance);
+    const service = getAuth(instance);
+    if (useEmulator && !authWired) {
+      authWired = true;
+      connectAuthEmulator(service, "http://127.0.0.1:9099", { disableWarnings: true });
+    }
+    return service;
   } catch (problem) {
     refused = (problem as Error).message;
     return null;
@@ -79,12 +108,20 @@ export function db(): Firestore | null {
   if (!instance) return null;
 
   try {
-    return getFirestore(instance);
+    const service = getFirestore(instance);
+    if (useEmulator && !dbWired) {
+      dbWired = true;
+      connectFirestoreEmulator(service, "127.0.0.1", 8080);
+    }
+    return service;
   } catch (problem) {
     refused = (problem as Error).message;
     return null;
   }
 }
+
+/** True when this browser is talking to the emulators, for the banner to say so. */
+export const onEmulator = () => useEmulator;
 
 /**
  * Why a call could not be made, in a sentence a player could read. Null when
