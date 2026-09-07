@@ -201,6 +201,56 @@ async function main() {
   const players = [];
   for (const player of PLAYERS) players.push(await seedPlayer(player));
 
+  /* A party with a night in progress, so /campaign/[id] and the notebook have
+     something real to show. Four players plus the game master, which is the
+     minimum a party can be given one at all. */
+  const seated = players.slice(0, 4);
+  const partyId = "thursday-nights";
+  const now = Date.now();
+
+  await put(`parties/${partyId}`, {
+    name: "Thursday nights in Achrafieh",
+    area: "achrafieh",
+    playerIds: seated,
+    gmId: gm,
+    status: "playing",
+    slot: null,
+    /* The aggregate: what the table shares, never who said it. */
+    profile: {
+      week: [...WEEKDAY_EVENINGS],
+      arrangements: ["public"],
+      limits: { "harm-to-children": "line", torture: "line", spiders: "veil", "graphic-violence": "veil" },
+    },
+    createdAt: now,
+    updatedAt: now,
+  });
+
+  for (const uid of seated) await put(`parties/${partyId}/members/${uid}`, { role: "player" });
+  await put(`parties/${partyId}/members/${gm}`, { role: "gm" });
+  await put(`parties/${partyId}/secrets/chat`, { url: "https://chat.whatsapp.com/seeded-example" });
+
+  await put(`parties/${partyId}/sessions/night-one`, {
+    campaignId: partyId, number: 1, title: "The road to Byblos",
+    playedOn: now, open: false,
+  });
+  await put(`parties/${partyId}/sessions/night-two`, {
+    campaignId: partyId, number: 2, title: "What the smith knew",
+    playedOn: now, open: true,
+  });
+
+  const note = (id, sessionId, book, authorId, authorName, body, kind) =>
+    put(`parties/${partyId}/sessions/${sessionId}/notes/${id}`, {
+      sessionId, book, authorId, authorName, body, kind,
+      tags: (body.match(/[#@][a-z0-9-]+/gi) || []).map((t) => t.slice(1).toLowerCase()),
+      createdAt: now, updatedAt: now,
+    });
+
+  await note("n1", "night-one", "party", seated[0], "orla_ironbrand", "We met @maret, a smith in Jbeil who would not look at the coin.", "npc");
+  await note("n2", "night-one", "party", seated[1], "sami_h", "The #cedar-compact is a name three people refused to explain.", "question");
+  await note("n3", "night-two", "party", seated[2], "nadia_k", "Took a sealed letter from the caravan. Nadia is carrying it.", "loot");
+  await note("g1", "night-one", "gm", gm, "bassam_gm", "@maret is lying about the coin. She minted it herself.", "npc");
+  await note("g2", "night-two", "gm", gm, "bassam_gm", "If they open the letter early, the #cedar-compact finds them first.", "note");
+
   console.log(`
   Seeded. Everybody's password is "${PASSWORD}".
 
@@ -216,7 +266,9 @@ async function main() {
   made into a party from /admin. Rita is the one who will not fit, which is the
   more interesting case to look at.
 
-  No parties yet: building one from /admin is the thing worth trying.
+  One party, "Thursday nights in Achrafieh": the four who overlap plus the game
+  master, two sessions with the second still open, and notes in both books.
+  Open /campaign/thursday-nights as any of them.
 `);
 }
 

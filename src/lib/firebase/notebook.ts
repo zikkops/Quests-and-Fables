@@ -62,10 +62,10 @@ import {
  * session is asked only for what changed since the last look, which for a
  * session played six weeks ago is nothing. See `src/lib/notecache.ts`.
  *
- * ⚠️ Nothing calls this yet. Parties, partys and membership are Phase 3, and
- * a notebook cannot exist before the party whose notebook it is. It is written
- * now because the rules and the shape had to be decided together, and because
- * the demo on `/party` runs the same component against the same types.
+ * `watchSession` is the live half, and it is pointed at **the open session
+ * only**. That is the same argument as above rather than a different one: a
+ * listener on every night of a long campaign would undo the caching, and the
+ * night in progress is the only one anybody is writing in. See `Campaign.tsx`.
  */
 
 export const NOTEBOOK_PATHS = {

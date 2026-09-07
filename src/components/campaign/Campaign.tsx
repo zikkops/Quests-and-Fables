@@ -14,6 +14,7 @@ import {
   listSessions,
   removeNote,
   syncNotes,
+  watchSession,
 } from "@/lib/firebase/notebook";
 import { useSession } from "@/lib/firebase/session";
 import { useHydrated } from "@/lib/useHydrated";
@@ -122,6 +123,56 @@ export default function Campaign({ partyId }: { partyId: string }) {
       alive = false;
     };
   }, [role, user, partyId, round]);
+
+  /*
+    The open session, live.
+
+    A notebook nobody else's writing reaches is not shared, it is a diary. Six
+    people around one table typing into the same night have to see each other,
+    and until now this loaded once and never heard another word: you found out
+    what somebody wrote by reloading the page.
+
+    **Only the open session gets a listener, and that is the whole design.**
+    `syncNotes` exists because reads are billed per document and a full campaign
+    is around 1,500 of them, so history is cached and asked only for what changed.
+    Subscribing to every session would throw that away and hold a listener on
+    six weeks of nights nobody is writing in. The night in progress is the only
+    one that moves.
+
+    Both books are watched for a game master. The rules refuse a player the
+    second query rather than this condition doing it, but asking for something
+    that will be refused is a permission error in the console and a listener
+    that never fires, so the condition is here as well.
+  */
+  const openSession = useMemo(
+    () => sessions.find((night) => night.open) ?? null,
+    [sessions],
+  );
+
+  useEffect(() => {
+    if (!role || !openSession) return;
+
+    /* Replace this session's notes in that book, leave every other night's
+       alone. The snapshot is the truth for the night it covers and says
+       nothing about the rest. */
+    const merge = (book: "party" | "gm") =>
+      (live: SessionNote[]) => {
+        const set = book === "gm" ? setGmNotes : setNotes;
+        set((current) => [
+          ...current.filter(
+            (note) => !(note.sessionId === openSession.id && note.book === book),
+          ),
+          ...live,
+        ]);
+      };
+
+    const stop = [watchSession(partyId, openSession.id, "party", merge("party"))];
+    if (role === "gm") {
+      stop.push(watchSession(partyId, openSession.id, "gm", merge("gm")));
+    }
+
+    return () => stop.forEach((unsubscribe) => unsubscribe());
+  }, [role, partyId, openSession]);
 
   /* What this browser has, for the "bring one" button. */
   const mine = useMemo(() => {
