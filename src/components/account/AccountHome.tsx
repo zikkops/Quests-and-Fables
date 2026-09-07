@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { LIVE_LEBANON } from "@/data/lebanon";
 import { updateProfile } from "@/lib/firebase/account";
 import { useSession } from "@/lib/firebase/session";
@@ -113,6 +114,32 @@ export default function AccountHome() {
           number only once you have a seat.
         </p>
       </section>
+
+      {/*
+        The way to the game master's own page.
+
+        Nothing anywhere linked to /gm. A recruited game master signed in,
+        landed here, and had no route to the one surface built for them short
+        of typing the URL: it was orphaned in the route map. Game masters are
+        the scarce side this whole product courts, which makes it the worst
+        page to leave unreachable.
+
+        Only shown to somebody an admin has marked. `gm` is set with the admin
+        console and refused to everybody else by the rules, so this is a link,
+        not a claim.
+      */}
+      {profile.gm ? (
+        <section className={`${styles.card} ${styles.wide}`}>
+          <h2 className={styles.cardTitle}>You run tables</h2>
+          <p className={styles.cardBody}>
+            The parties you have been given, the nights they are playing, and
+            the notebook for each one.
+          </p>
+          <Link href="/gm" className={styles.primary}>
+            Your tables
+          </Link>
+        </section>
+      ) : null}
 
       <Details
         uid={user.uid}

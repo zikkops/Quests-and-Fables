@@ -151,14 +151,14 @@ Three places where this deviates from the vault notes, deliberately:
 | `/parties` | **Built.** Open tables, ranked by fit for whoever is signed in, filtered by the hard rules in `src/lib/match.ts`. Still **dynamic**: it reads `?area=` from the homepage picker and answers it with the map |
 | `/parties/[id]` | **Built.** One table: where, when, and what it will not play through. Ask for a seat, or withdraw |
 | `/campaign/[id]` | **Built.** A real party's table: the sheets everybody brought and the live notebook. Members only, enforced in the rules |
-| `/gm` | **Built.** The tables a game master runs. Anyone else gets told game masters are recruited, not signed up |
+| `/gm` | **Built.** The tables a game master runs. Anyone else gets told game masters are recruited, not signed up. Linked from `/account`, and only for somebody an admin has marked |
 | `/campaign` | The demo, hosting two **working** things on made up data: the tracker and the notebook. The real one is `/campaign/[id]` |
-| `/safety` | Stub |
+| `/safety` | **Built.** The rules the product enforces: house calls or somewhere public, verified game masters, area not address, hard limits as a filter |
 | `/sign-in` | **Built.** Sign in, register, and reset a password. Registration is one form: email, password, username, date of birth, phone, area |
 | `/account` | **Built.** Details, play areas, the week, and the five characters |
 | `/account/setup` | **Built.** The recovery path for an account whose profile write failed halfway. Not the normal route in |
 | `/admin` | **Built.** The console: every player, the live overlap of any four of them, party forming, game master assignment, the WhatsApp handoff. Admin claim only, unlinked, noindex |
-| `/onboarding/player` | Stub — kept for the explanation. The availability editor it described now lives on `/account` |
+| `/onboarding/player` | **Built as an explainer.** The four questions, said before a sign-up form appears. The editor itself lives on `/account`, and the button goes to `/sign-in` |
 | `/join` | Stub — the game master invitation. **There is no game master sign-up.** They are recruited, met in person, and handed a party, so this page is one email address and an explanation. It replaced `/onboarding/gm`, which described a self-serve flow (post a table, sift applicants) that `Scope v1.md` does not have |
 
 A stub renders and honestly explains what the page will do, so nav links never
