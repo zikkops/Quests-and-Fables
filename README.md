@@ -49,6 +49,41 @@ No environment variables are needed to run the site. Accounts want six, and say
 so rather than breaking without them — copy `.env.example` to `.env.local` when
 there is a Firebase project to point at. See [Accounts](#accounts).
 
+### Against throwaway data
+
+```bash
+npm run dev:emulator   # the site, on local auth + Firestore emulators
+npm run test:rules     # 46 cases against firestore.rules
+```
+
+`npm run dev` talks to the **real** project. `dev:emulator` talks to local
+emulators: disposable accounts, an empty database every time, and a badge on
+every page saying so.
+
+**Use it for anything involving registration.** `firestore.rules` gives a
+claimed username no release path from the client and there is no Admin SDK for
+this project, so a test signup against the real database burns that username
+permanently. There is no way to undo it from here.
+
+It picks the first free port from 3002 up and prints it, and builds into
+`.next-emulator`, so it runs happily beside a normal `npm run dev` on 3000. The
+Firebase emulator UI is on <http://localhost:4000>.
+
+Both commands need **Java** for the Firestore emulator. There is a Temurin 21
+JRE at `C:\Users\User\.jre-temurin-21`, already on the user PATH with
+`JAVA_HOME` set. Without a JDK both fail with Firebase's own "Could not spawn
+java", which is clear enough.
+
+Two things that will catch you out:
+
+- **They both want port 8080, so they cannot run at the same time.** Stop
+  `dev:emulator` before running the rules tests, or the tests die with "Could
+  not start Firestore Emulator, port taken."
+- **Emulators can outlive the command that started them.** Killing
+  `dev:emulator` on Windows sometimes leaves the Java emulator and the
+  `firebase-tools` parent behind, holding 8080 and 9099. `netstat -ano | grep
+  8080` finds the pid.
+
 ## Stack
 
 | Layer | Choice |
