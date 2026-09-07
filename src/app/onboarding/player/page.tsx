@@ -4,68 +4,83 @@ import StubPage from "@/components/StubPage";
 export const metadata: Metadata = {
   title: "For players",
   description:
-    "Five questions, under three minutes: when you can play, where you can play, "
-    + "how you like to play, what's off the table, and your character.",
+    "Four questions, under three minutes: when you can play, where you can play, "
+    + "where you will sit, and what is off the table. Every one of them is "
+    + "something a party can be matched on.",
 };
 
+/**
+ * The page a cold visitor lands on before they have an account.
+ *
+ * It exists to say what will be asked *before* a sign-up form appears, because
+ * "four questions, three minutes" read first is worth more than the same words
+ * read afterwards. Everything it describes is built and lives behind the
+ * account, so the button goes to /sign-in, which forwards anybody already
+ * signed in straight to /account.
+ *
+ * ⚠️ It carried a "Not built yet · Phase 2" badge until 2026-09-07, long after
+ * the flow shipped, and its primary button offered the character builder: it
+ * described the five questions and then gave you no way to answer any of them.
+ * Keep this page honest about what the account actually asks. It promised a
+ * play-style question that the profile has never collected.
+ */
 export default function PlayerOnboardingPage() {
   return (
     <StubPage
       eyebrow="For players"
-      phase="Phase 2"
-      title="Five questions. Under three minutes."
+      title="Four questions. Under three minutes."
       lede={
-        "No bio, no “tell us about yourself” box. Just the handful of things that "
-        + "actually predict whether a group lasts, and every one of them is something a "
-        + "table can match you on."
+        "No bio, and no “tell us about yourself” box. Just the handful of "
+        + "things that actually decide whether a group lasts, and every one of them "
+        + "is something a party can be matched on."
       }
-      stepsHeading="The flow"
+      stepsHeading="What we ask"
       steps={[
         {
           title: "When can you play?",
           body:
-            "A weekly grid in your own timezone. This is the single biggest predictor of "
-            + "whether a table survives, and it works almost as a hard filter: no overlapping "
-            + "slot means the match is worthless however well you'd get on.",
+            "A weekly grid, in blocks rather than hours, because nobody schedules a "
+            + "four hour session to the minute. This is the single biggest predictor "
+            + "of whether a table survives, and it works almost as a hard filter: no "
+            + "overlapping evening means no match, however well you would all get on.",
         },
         {
           title: "Where can you play?",
           body:
-            "Online, in person, or both. If you'll travel, the places you're happy to get to "
-            + "and how far is reasonable on a weeknight. Plenty of good tables die because "
-            + "everyone assumed the other person could reach them.",
+            "The areas you can actually get to on a weeknight, which is not the same "
+            + "as where you live. We hold both. Other players only ever see the "
+            + "areas, never your address, and plenty of good tables die because "
+            + "everybody assumed the other person could reach them.",
         },
         {
-          title: "What kind of game?",
+          title: "Where will you sit?",
           body:
-            "How much you want combat, roleplay and exploration. Someone who wants three "
-            + "hours of tavern conversation and someone who wants a dungeon crawl can both "
-            + "be happy, just not at the same table.",
+            "A game master will come to you, or the table meets somewhere public. "
+            + "Whichever you leave unticked you are never offered, and you never "
+            + "have to explain why. A home game happens only when the whole table "
+            + "has agreed to one.",
         },
         {
-          title: "What's off the table?",
+          title: "What is off the table?",
           body:
-            "Lines and veils: the things you don't want in a game, and the things you'll "
-            + "allow if they happen off screen. A hard filter, never a suggestion. A table "
-            + "that conflicts with your limits never reaches you.",
-        },
-        {
-          title: "Build a character",
-          body:
-            "Optional, and the fastest way to get accepted. The builder is free and needs no "
-            + "account, though joining a table does.",
+            "Lines and veils: what is never in the game, and what can happen off "
+            + "screen. A hard filter, never a suggestion. A party that conflicts "
+            + "with a line of yours does not reach you, and nobody is told which of "
+            + "you set it.",
         },
       ]}
       note={{
         title: "Why this is short",
         body:
-          "Players are the abundant side of this marketplace and game masters are the scarce "
-          + "one, so this flow is deliberately shorter than theirs. Every extra screen here "
-          + "costs players and buys nothing.",
+          "Players are the abundant side of this and game masters are the scarce "
+          + "one, so this is deliberately shorter than their side. Every extra "
+          + "screen here costs players and buys nothing. You can change all of it "
+          + "later, from your account, whenever your Thursdays change.",
       }}
       actions={[
-        { href: "/character-builder", label: "Build a character", primary: true },
-        { href: "/parties", label: "Browse parties" },
+        { href: "/sign-in", label: "Answer them now", primary: true },
+        { href: "/character-builder", label: "Build a character first" },
+        { href: "/parties", label: "See how parties form" },
       ]}
     />
   );
