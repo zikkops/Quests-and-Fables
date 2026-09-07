@@ -66,8 +66,11 @@ this project, so a test signup against the real database burns that username
 permanently. There is no way to undo it from here.
 
 It picks the first free port from 3002 up and prints it, and builds into
-`.next-emulator`, so it runs happily beside a normal `npm run dev` on 3000. The
-Firebase emulator UI is on <http://localhost:4000>.
+`.next-emulator`, so it runs happily beside a normal `npm run dev` on 3000.
+
+There is **no Emulator UI** with it: `ui` is not a valid `--only` target, so
+`emulators:exec` never starts it. Run `npx firebase-tools emulators:start`
+separately if you want to browse the data at <http://localhost:4000>.
 
 Both commands need **Java** for the Firestore emulator. There is a Temurin 21
 JRE at `C:\Users\User\.jre-temurin-21`, already on the user PATH with
@@ -91,7 +94,7 @@ Two things that will catch you out:
 | Framework | Next.js 16 (App Router, Turbopack), React 19.2, TypeScript |
 | Styling | CSS Modules + design tokens in `src/app/globals.css` |
 | Animation | GSAP 3 + `@gsap/react` (`useGSAP` cleans up on unmount, so animations don't leak across routes) |
-| Database / auth | Firebase: Auth (email and password) + Firestore. **Built, project live, rules not deployed** — see [Accounts](#accounts) |
+| Database / auth | Firebase: Auth (email and password) + Firestore. **Live, with `firestore.rules` deployed and tested** — see [Accounts](#accounts) |
 | Payments | **None, by design.** Settled off-platform, player to GM |
 
 Three places where this deviates from the vault notes, deliberately:

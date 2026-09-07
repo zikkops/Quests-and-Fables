@@ -75,7 +75,12 @@ const command =
   + ` --only auth,firestore --project ${PROJECT} "npx next dev -p ${PORT}"`;
 
 console.log(`
-  Emulator mode. App on http://localhost:${PORT}, emulator UI on http://localhost:4000
+  Emulator mode. App on http://localhost:${PORT}
+  Throwaway accounts, an empty database, and nothing touching production.
+
+  No Emulator UI: "ui" is not a valid --only target, so emulators:exec never
+  starts it. For that, run the emulators on their own with
+  npx firebase-tools emulators:start
 `);
 
 const child = spawn(command, {
