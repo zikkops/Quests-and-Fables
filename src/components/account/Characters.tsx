@@ -30,18 +30,29 @@ type Local =
   | { kind: "srd"; name: string; doc: CharacterDoc }
   | { kind: "custom"; name: string; doc: CustomCharacter };
 
-function localDraft(): Local | null {
-  const custom = loadCustom();
-  if (custom && custom.name.trim()) {
-    return { kind: "custom", name: custom.name.trim(), doc: custom };
-  }
+/**
+ * Every named draft on this device, not just one.
+ *
+ * This used to return the custom sheet if there was one and the built character
+ * otherwise, which meant somebody who had used both builders could never save
+ * the second: the card offered the custom one and there was no way to reach the
+ * other except by clearing it. The two builders keep separate drafts, so this
+ * reports separately too.
+ */
+function localDrafts(): Local[] {
+  const drafts: Local[] = [];
 
   const built = loadCharacter();
   if (built && built.choices.details.name?.trim()) {
-    return { kind: "srd", name: sheetFromBuild(built).name, doc: built };
+    drafts.push({ kind: "srd", name: sheetFromBuild(built).name, doc: built });
   }
 
-  return null;
+  const custom = loadCustom();
+  if (custom && custom.name.trim()) {
+    drafts.push({ kind: "custom", name: custom.name.trim(), doc: custom });
+  }
+
+  return drafts;
 }
 
 const when = (stamp: number) =>
@@ -72,13 +83,17 @@ export default function Characters({ uid, count, onChanged }: Props) {
 
   const [saved, setSaved] = useState<SavedCharacter[] | null>(null);
   const [round, setRound] = useState(0);
-  const [kept, setKept] = useState(false);
+  /* Which drafts have been put on the account this visit, by kind. */
+  const [kept, setKept] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   /* localStorage does not exist on the server, so the draft is read only once
      the browser has taken over. See useHydrated for why this is not an effect. */
-  const draft = useMemo(() => (hydrated && !kept ? localDraft() : null), [hydrated, kept]);
+  const drafts = useMemo(
+    () => (hydrated ? localDrafts().filter((d) => !kept.includes(d.kind)) : []),
+    [hydrated, kept],
+  );
 
   /* Fetching the list is the effect. Bumping `round` is how a write asks for
      it again, which keeps the fetch in one place rather than in every handler. */
@@ -102,14 +117,13 @@ export default function Characters({ uid, count, onChanged }: Props) {
 
   const full = count >= CHARACTER_LIMIT;
 
-  const keep = async () => {
-    if (!draft) return;
+  const keep = async (draft: Local) => {
     setError(null);
     setBusy(true);
 
     try {
       await createCharacter(uid, { name: draft.name, kind: draft.kind, doc: draft.doc });
-      setKept(true);
+      setKept((done) => [...done, draft.kind]);
       setRound((n) => n + 1);
       await onChanged();
     } catch (problem) {
@@ -119,9 +133,21 @@ export default function Characters({ uid, count, onChanged }: Props) {
     }
   };
 
+  /*
+    A custom sheet opens in the custom editor. It used to put the character on
+    the device correctly and then send everybody to /character-builder, which
+    reads the *other* draft: you asked for your homebrew Battle Master and got
+    whichever SRD character was last in the builder, with no indication that
+    anything had gone wrong.
+  */
   const open = (entry: SavedCharacter) => {
-    if (entry.kind === "custom") keepCustomLocally(entry.doc as CustomCharacter);
-    else keepBuildLocally(entry.doc as CharacterDoc);
+    if (entry.kind === "custom") {
+      keepCustomLocally(entry.doc as CustomCharacter);
+      router.push("/character-builder/custom");
+      return;
+    }
+
+    keepBuildLocally(entry.doc as CharacterDoc);
     router.push("/character-builder");
   };
 
@@ -194,27 +220,36 @@ export default function Characters({ uid, count, onChanged }: Props) {
 
       {error ? <p className={styles.error}>{error}</p> : null}
 
-      {draft ? (
-        <div className={roster.draft}>
-          <p className={roster.draftTitle}>On this device</p>
+      {drafts.map((draft) => (
+        <div key={draft.kind} className={roster.draft}>
+          <p className={roster.draftTitle}>
+            On this device
+            {draft.kind === "custom" ? ", typed in by hand" : ", built from the SRD"}
+          </p>
           <p className={styles.cardBody}>
-            <strong>{draft.name}</strong> is in the builder on this browser and
-            is not on your account.
+            <strong>{draft.name}</strong> is in the{" "}
+            {draft.kind === "custom" ? "blank sheet" : "builder"} on this browser
+            and is not on your account.
           </p>
           <button
             type="button"
             className={styles.primary}
-            onClick={keep}
+            onClick={() => keep(draft)}
             disabled={busy || full}
           >
             {full ? "Five is the limit" : busy ? "Saving…" : "Save it to my account"}
           </button>
         </div>
-      ) : null}
+      ))}
 
-      <Link href="/character-builder" className={styles.secondary}>
-        {saved && saved.length > 0 ? "Build another" : "Build one"}
-      </Link>
+      <div className={roster.rowActions}>
+        <Link href="/character-builder" className={styles.secondary}>
+          {saved && saved.length > 0 ? "Build another" : "Build one"}
+        </Link>
+        <Link href="/character-builder/custom" className={styles.secondary}>
+          Blank sheet
+        </Link>
+      </div>
 
       {full ? (
         <p className={styles.fine}>

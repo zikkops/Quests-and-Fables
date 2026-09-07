@@ -158,6 +158,16 @@
   color: var(--ink-3);
 }
 
+/* Where a step has to admit the licence stops here. Quiet, but not hidden: the
+   player who wants a subclass we cannot ship needs to find the blank sheet. */
+.stepAside {
+  font-size: 13.5px;
+  color: var(--ink-2);
+  border-left: 2px solid var(--accent);
+  padding: 2px 0 2px 12px;
+  max-width: 62ch;
+}
+
 .options {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));

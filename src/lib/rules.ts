@@ -83,6 +83,12 @@ export type Step = {
   standardArray?: number[];
   pointBuy?: { budget: number; min: number; max: number; costs: Record<string, number> };
   fields?: TextField[];
+  /**
+   * An optional pointer to somewhere else, rendered under the help text.
+   * Generic on purpose: a step that needs to say "this is as far as the licence
+   * goes" is data, not a special case in the renderer.
+   */
+  aside?: { text: string; href: string; label: string };
 };
 
 export const STEPS: Step[] = [
@@ -121,7 +127,14 @@ export const STEPS: Step[] = [
     type: "single-select",
     source: "subclasses",
     required: true,
-    help: "Your specialisation. Every class picks one at level 3.",
+    help:
+      "Your specialisation. Every class picks one at level 3, and the SRD "
+      + "includes exactly one for each class, so there is a single option here.",
+    aside: {
+      text: "Playing a different one, from a book you own?",
+      href: "/character-builder/custom",
+      label: "Type it in on a blank sheet",
+    },
     filter: { classKey: "$class.key" },
     showWhen: "$class.subclassLevel <= $level",
   },

@@ -141,6 +141,14 @@ export default function Builder() {
           <section className={styles.step}>
             <h2 className={styles.stepTitle}>{titleFor(step, ctx)}</h2>
             {step.help ? <p className={styles.stepHelp}>{step.help}</p> : null}
+            {step.aside ? (
+              <p className={styles.stepAside}>
+                {step.aside.text}{" "}
+                <Link href={step.aside.href} className={styles.link}>
+                  {step.aside.label}
+                </Link>
+              </p>
+            ) : null}
             {renderStep(step, ctx, doc, setChoice, update)}
           </section>
         ) : null}
