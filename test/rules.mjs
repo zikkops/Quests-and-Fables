@@ -403,6 +403,53 @@ await check("nobody reads another player's requests", async () => {
   await assertSucceeds(getDoc(doc(player("bob"), "seatRequests", "r1")));
 });
 
+/* ========================================================================
+   Reports
+   ======================================================================== */
+console.log("\nReports");
+
+const aReport = (over = {}) => ({
+  reporterId: "bob", reporterName: "bob",
+  targetKind: "player", targetId: "carol", targetName: "carol",
+  reason: "safety", detail: "Made the table uncomfortable.", status: "open",
+  createdAt: Date.now(), ...over,
+});
+
+await check("a player can file a report", async () => {
+  await assertSucceeds(setDoc(doc(player("bob"), "reports", "rep1"), aReport()));
+});
+
+await check("a report cannot be filed in somebody else's name", async () => {
+  await assertFails(setDoc(doc(player("bob"), "reports", "rep2"), aReport({ reporterId: "carol" })));
+});
+
+await check("reporting yourself is refused", async () => {
+  await assertFails(setDoc(doc(player("bob"), "reports", "rep3"), aReport({ targetId: "bob" })));
+});
+
+await check("a report cannot be filed already answered", async () => {
+  await assertFails(setDoc(doc(player("bob"), "reports", "rep4"), aReport({ status: "dismissed" })));
+});
+
+await check("the subject cannot read a report about them", async () => {
+  await assertFails(getDoc(doc(player("carol"), "reports", "rep1")));
+});
+
+await check("the reporter can read their own back", async () => {
+  await assertSucceeds(getDoc(doc(player("bob"), "reports", "rep1")));
+});
+
+await check("an admin reads it, and answers it", async () => {
+  await assertSucceeds(getDoc(doc(admin("root"), "reports", "rep1")));
+  await assertSucceeds(updateDoc(doc(admin("root"), "reports", "rep1"), { status: "actioned" }));
+});
+
+await check("nobody edits or deletes a report, including whoever filed it", async () => {
+  await assertFails(updateDoc(doc(player("bob"), "reports", "rep1"), { detail: "Actually never mind." }));
+  await assertFails(deleteDoc(doc(player("bob"), "reports", "rep1")));
+  await assertFails(deleteDoc(doc(admin("root"), "reports", "rep1")));
+});
+
 await check("the final deny still denies", async () => {
   await assertFails(getDoc(doc(player("bob"), "anythingElse", "x")));
   await assertFails(setDoc(doc(admin("root"), "anythingElse", "x"), { a: 1 }));

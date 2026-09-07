@@ -36,7 +36,7 @@ rules_version = '2';
      without the first the counter never rises, without the second it can be
      wound back to zero for free and the limit means nothing.
 
-  **Every rule in this file is tested.** `npm run test:rules` runs 46 cases
+  **Every rule in this file is tested.** `npm run test:rules` runs 55 cases
   against the emulator. Each one is what somebody with the SDK and a text
   editor can do, rather than what the app happens to do, because the app being
   well behaved is not evidence. Run it before deploying: a rules mistake does
@@ -457,6 +457,47 @@ service cloud.firestore {
 
       allow delete: if isAdmin()
                     || (signedIn() && resource.data.playerId == request.auth.uid);
+    }
+
+    /* ---- reports ---------------------------------------------------------
+       Somebody saying that something here is wrong.
+
+       Legal & Compliance lists this among the things that exist **before** open
+       matching, not after: strangers meet in person through this, and a player
+       with a bad experience needs a route inside the product rather than an
+       email address and hope.
+
+       Write-only from a player's side, which is the shape that matters. You may
+       file one and read your own back; you may not read anybody else's, edit
+       one after the fact, or delete one. A report that its subject could find,
+       change or make disappear would be worse than no report at all, and the
+       reporter cannot quietly withdraw the record either.
+       -------------------------------------------------------------------- */
+    match /reports/{reportId} {
+      allow read: if isAdmin()
+                  || (signedIn() && resource.data.reporterId == request.auth.uid);
+
+      allow create: if signedIn()
+                    && inGoodStanding(request.auth.uid)
+                    && request.resource.data.reporterId == request.auth.uid
+                    // Reporting yourself is not a thing that needs to work.
+                    && request.resource.data.targetId != request.auth.uid
+                    && request.resource.data.targetId is string
+                    && request.resource.data.targetKind in ['player', 'note']
+                    && request.resource.data.reason in
+                         ['safety', 'harassment', 'content', 'noshow', 'other']
+                    && request.resource.data.detail is string
+                    && request.resource.data.detail.size() <= 1000
+                    && request.resource.data.status == 'open';
+
+      // Answering one is the service's job. Nobody edits a report, including
+      // the person who filed it: the record is what was said at the time.
+      allow update: if isAdmin()
+                    && request.resource.data.reporterId == resource.data.reporterId
+                    && request.resource.data.targetId == resource.data.targetId
+                    && request.resource.data.status in ['open', 'actioned', 'dismissed'];
+
+      allow delete: if false;
     }
 
     /* ---- everything else ------------------------------------------------

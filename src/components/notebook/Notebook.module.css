@@ -553,3 +553,30 @@
     border-color: var(--line);
   }
 }
+
+/* Deliberately quiet. It should be findable when somebody needs it and
+   invisible the rest of the time: a prominent report button on every line
+   changes how a table writes in front of each other. */
+.report {
+  font-family: inherit;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  background: none;
+  border: 0;
+  padding: 2px 6px;
+  border-radius: 6px;
+  color: var(--ink-3);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 140ms var(--ease-out), color 140ms var(--ease-out);
+}
+
+li:hover .report,
+.report:focus-visible {
+  opacity: 1;
+}
+
+.report:hover,
+.report:focus-visible {
+  color: var(--err);
+}

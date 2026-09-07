@@ -37,6 +37,12 @@ type Props = {
   /** Absent means read only, which is what the party's record is to a GM. */
   onAdd?: (draft: Draft) => void;
   onRemove?: (id: string) => void;
+  /**
+   * Absent on the demo, present at a real table. Legal & Compliance asks for a
+   * report control on every piece of user content, and a note is the only
+   * user-written thing anybody else can see here.
+   */
+  onReport?: (note: SessionNote) => void;
 };
 
 const when = (stamp: number) =>
@@ -60,7 +66,7 @@ const when = (stamp: number) =>
  * clicking produces one. `firestore.rules` is what actually stops them. This is
  * only the part that stops it being confusing.
  */
-export default function Notebook({ sessions, notes, viewer, onAdd, onRemove }: Props) {
+export default function Notebook({ sessions, notes, viewer, onAdd, onRemove, onReport }: Props) {
   const ordered = useMemo(() => [...sessions].sort(byRecency), [sessions]);
   const openSession = ordered.find((s) => s.open) ?? ordered[0];
 
@@ -237,6 +243,7 @@ export default function Notebook({ sessions, notes, viewer, onAdd, onRemove }: P
                       query=""
                       mine={note.authorId === viewer.id}
                       onRemove={onRemove}
+                      onReport={onReport}
                     />
                   ))}
                 </ol>
@@ -268,11 +275,13 @@ function Entry({
   query,
   mine,
   onRemove,
+  onReport,
 }: {
   note: SessionNote;
   query: string;
   mine: boolean;
   onRemove?: (id: string) => void;
+  onReport?: (note: SessionNote) => void;
 }) {
   const runs = query ? highlight(note.body, query) : [{ text: note.body, hit: false }];
 
@@ -283,6 +292,16 @@ function Entry({
           {kindLabel(note.kind)}
         </span>
         <span className={styles.author}>{note.authorName}</span>
+        {!mine && onReport ? (
+          <button
+            type="button"
+            className={styles.report}
+            onClick={() => onReport(note)}
+            title={`Report this note by ${note.authorName}`}
+          >
+            Report
+          </button>
+        ) : null}
         {mine && onRemove ? (
           <button
             type="button"

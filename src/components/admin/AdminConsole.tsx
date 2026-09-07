@@ -9,6 +9,7 @@ import { type Party } from "@/lib/party";
 import Players from "./Players";
 import Parties from "./Parties";
 import Requests from "./Requests";
+import Reports from "./Reports";
 import styles from "./Admin.module.css";
 
 /**
@@ -128,6 +129,8 @@ export default function AdminConsole() {
         spokenFor={spokenFor}
         onChanged={reload}
       />
+
+      <Reports />
 
       <Requests parties={parties ?? []} profiles={profiles ?? []} onChanged={reload} />
 

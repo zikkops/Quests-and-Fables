@@ -30,6 +30,7 @@ import type { Party } from "@/lib/party";
 import type { PlaySession, SessionNote } from "@/lib/notebook";
 import Tracker from "../Tracker";
 import Notebook, { type Draft } from "../notebook/Notebook";
+import ReportDialog from "./ReportDialog";
 import styles from "./Campaign.module.css";
 
 /**
@@ -52,6 +53,8 @@ export default function Campaign({ partyId }: { partyId: string }) {
 
   const [party, setParty] = useState<Party | null | "missing">(null);
   const [sheets, setSheets] = useState<TableSheet[]>([]);
+  /** The note somebody is reporting, if any. */
+  const [reporting, setReporting] = useState<SessionNote | null>(null);
   const [sessions, setSessions] = useState<PlaySession[]>([]);
   const [notes, setNotes] = useState<SessionNote[]>([]);
   const [gmNotes, setGmNotes] = useState<SessionNote[]>([]);
@@ -371,9 +374,20 @@ export default function Campaign({ partyId }: { partyId: string }) {
             viewer={{ id: profile!.uid, name: profile!.username, role }}
             onAdd={write}
             onRemove={erase}
+            onReport={setReporting}
           />
         )}
       </section>
+
+      {reporting && profile ? (
+        <ReportDialog
+          note={reporting}
+          reporterId={profile.uid}
+          reporterName={profile.username}
+          partyId={partyId}
+          onClose={() => setReporting(null)}
+        />
+      ) : null}
     </div>
   );
 }
