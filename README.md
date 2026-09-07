@@ -72,6 +72,34 @@ There is **no Emulator UI** with it: `ui` is not a valid `--only` target, so
 `emulators:exec` never starts it. Run `npx firebase-tools emulators:start`
 separately if you want to browse the data at <http://localhost:4000>.
 
+### Accounts to sign in as
+
+```bash
+npm run seed:emulator   # with dev:emulator already running
+```
+
+Wipes the emulator and fills it with seven accounts. **The password is
+`password` for all of them.**
+
+| Sign in as | Username | What they are for |
+|---|---|---|
+| `admin@local` | the_house | **The only way to reach `/admin`** |
+| `gm@local` | bassam_gm | A recruited game master, for `/gm` |
+| `orla@local` | orla_ironbrand | Will host, free most weekday evenings |
+| `sami@local` | sami_h | Will visit a home, one hard limit |
+| `nadia@local` | nadia_k | Free most nights |
+| `ziad@local` | ziad_r | Public rooms only, 19, two limits set |
+| `rita@local` | rita_s | Jounieh, Thursdays only, will not travel |
+
+Seeding is the **only** way to get an admin. The `admin` claim is not a field
+in the database and cannot be granted from a browser, so registering through
+the UI will never produce one, and `/admin` is where parties are built and
+game masters assigned.
+
+Four of the five players overlap on weekday evenings around Achrafieh, so they
+can be made into a party. Rita is the one who will not fit, which is the more
+interesting case to look at.
+
 Both commands need **Java** for the Firestore emulator. There is a Temurin 21
 JRE at `C:\Users\User\.jre-temurin-21`, already on the user PATH with
 `JAVA_HOME` set. Without a JDK both fail with Firebase's own "Could not spawn
