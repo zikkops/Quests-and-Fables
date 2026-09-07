@@ -141,6 +141,17 @@ service cloud.firestore {
                        ).data.uid == uid;
 
       allow update: if (isOwner(uid) || isAdmin())
+                    // Nothing outside this list may appear on a profile. Without
+                    // it an update is an open document: a player could add
+                    // fields of their own choosing to a record the admin console
+                    // renders, and the fields protected one by one below are
+                    // only protected because somebody remembered to name them.
+                    // A whitelist fails closed; a blacklist fails silently.
+                    && request.resource.data.keys().hasOnly([
+                         'uid', 'username', 'email', 'phone', 'dob', 'area',
+                         'playAreas', 'week', 'venues', 'limits',
+                         'characterCount', 'gm', 'createdAt', 'updatedAt'
+                       ])
                     // The seven day clock. Written out rather than calling
                     // inGoodStanding(), because on an update the profile is
                     // already in hand and there is no sense paying for a get()
@@ -148,6 +159,15 @@ service cloud.firestore {
                     && (isAdmin()
                         || verified()
                         || request.time.toMillis() < resource.data.createdAt + 604800000)
+                    // ...and the clock cannot be wound back. `createdAt` is what
+                    // the grace period is measured against, so leaving it
+                    // writable let an unverified account refresh its own week
+                    // before the week ran out, forever. The check above reads
+                    // the stored value, so an expired account cannot update at
+                    // all — but an account still inside its week could have kept
+                    // itself there indefinitely and never confirmed an address.
+                    && (isAdmin()
+                        || request.resource.data.createdAt == resource.data.createdAt)
                     // Permanent, and not by accident: the request has to carry
                     // the same username it already had.
                     && request.resource.data.username == resource.data.username
@@ -164,6 +184,41 @@ service cloud.firestore {
                     && (isAdmin() || request.resource.data.get('gm', false)
                                      == resource.data.get('gm', false))
                     && request.resource.data.uid == resource.data.uid
+                    /*
+                      ⚠️ **KNOWN HOLE, 2026-09-07. The five character limit is
+                      bypassable and the header's claim four is currently false.**
+
+                      A create must increment the counter, and a delete must
+                      decrement it. But nothing requires a decrement to be
+                      accompanied by a delete, and this rule allows a bare
+                      update to lower it. So: make five characters, decrement
+                      the counter five times with plain profile writes, make
+                      five more. Repeat. The client never does this; the SDK and
+                      the REST API are right there for anybody who wants to, and
+                      "a rule that lives in a component is a suggestion" is this
+                      file's own argument.
+
+                      Rules cannot count a collection, so the counter itself is
+                      the right shape. The fix is to make a decrement prove a
+                      deletion, which needs the id in the same write:
+
+                        deleteCharacter() sends `removed: <characterId>` beside
+                        the decrement, and this rule adds
+
+                          && (request.resource.data.characterCount
+                                >= resource.data.characterCount
+                              || !existsAfter(/databases/$(database)/documents
+                                   /profiles/$(uid)/characters
+                                   /$(request.resource.data.removed)))
+
+                      Left undone deliberately: it changes the client's write
+                      contract, and there is no emulator on this machine to test
+                      a rules change against. Deploying an untested rule to a
+                      live database risks locking real players out of their own
+                      profiles, which is worse than the abuse it prevents.
+                      Cost of the hole today: unbounded character documents on
+                      one account. No data is exposed by it.
+                    */
                     // The counter is the limit's only enforcement point, so it
                     // may only ever move by one, and only inside the range.
                     && request.resource.data.characterCount >= 0
