@@ -82,6 +82,12 @@ export default function Builder() {
 
   const done = steps.filter((s) => stepComplete(s, ctx)).length;
 
+  /* The handoff is the entire reason the builder exists as a front door: someone
+     searches for a character builder, and the next thing they see is that there
+     are tables near them. It appears the moment the character is legal, not at
+     the end of the step list, because most people stop building before then. */
+  const ready = steps.every((s) => stepComplete(s, ctx));
+
   return (
     <div className={styles.builder}>
       <div className={styles.main}>
@@ -177,6 +183,20 @@ export default function Builder() {
       </div>
 
       <aside className={styles.aside}>
+        {ready ? (
+          <div className={styles.handoff}>
+            <p className={styles.handoffTitle}>
+              {sheet.name === "Unnamed" ? "Your character" : sheet.name} is ready.
+            </p>
+            <p className={styles.handoffBody}>
+              Now find a table. Parties of four to six are forming on the coast
+              between Beirut and Jbeil, and we find each one a game master.
+            </p>
+            <Link href="/parties" className={styles.handoffCta}>
+              Find a table near you
+            </Link>
+          </div>
+        ) : null}
         <Sheet sheet={sheet} />
       </aside>
     </div>
