@@ -182,11 +182,12 @@ await check("FIX: createdAt cannot be wound forward to refresh the grace week", 
   await assertFails(updateDoc(doc(unverified("bob"), "profiles", "bob"), { createdAt: Date.now() }));
 });
 
-await check("play style and experience can be saved", async () => {
+await check("play style, experience and languages can be saved", async () => {
   await assertSucceeds(
     updateDoc(doc(player("bob"), "profiles", "bob"), {
       style: { combat: 3, roleplay: 4, exploration: 1 },
       experience: "regular",
+      languages: ["en", "ar"],
       updatedAt: Date.now(),
     }),
   );

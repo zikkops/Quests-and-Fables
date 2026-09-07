@@ -9,10 +9,12 @@ import { useSession } from "@/lib/firebase/session";
 import {
   DEFAULT_VENUES,
   EXPERIENCE,
+  LANGUAGES,
   STYLE_AXES,
   STYLE_MAX,
   STYLE_STEPS,
   type ExperienceKey,
+  type LanguageKey,
   type PlayStyle,
   type StyleAxis,
   LIMIT_TOPICS,
@@ -164,6 +166,7 @@ export default function AccountHome() {
         uid={user.uid}
         style={profile.style}
         experience={profile.experience}
+        languages={profile.languages}
         onSaved={refresh}
       />
 
@@ -199,22 +202,26 @@ function HowYouPlay({
   uid,
   style: initialStyle,
   experience: initialExperience,
+  languages: initialLanguages,
   onSaved,
 }: {
   uid: string;
   style?: PlayStyle;
   experience?: ExperienceKey;
+  languages?: LanguageKey[];
   onSaved: () => Promise<void>;
 }) {
   const [style, setStyle] = useState<PlayStyle | undefined>(initialStyle);
   const [experience, setExperience] = useState<ExperienceKey | undefined>(initialExperience);
+  const [languages, setLanguages] = useState<LanguageKey[]>(initialLanguages ?? []);
   const [busy, setBusy] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const dirty =
     JSON.stringify(style ?? null) !== JSON.stringify(initialStyle ?? null)
-    || experience !== initialExperience;
+    || experience !== initialExperience
+    || JSON.stringify([...languages].sort()) !== JSON.stringify([...(initialLanguages ?? [])].sort());
 
   const set = (axis: StyleAxis, value: number) =>
     setStyle((current) => ({
@@ -230,7 +237,12 @@ function HowYouPlay({
     setBusy(true);
 
     try {
-      await updateProfile(uid, { style, experience });
+      await updateProfile(uid, {
+        style,
+        experience,
+        /* Empty means "not stated" and must not be written as "speaks nothing". */
+        languages: languages.length > 0 ? languages : undefined,
+      });
       setSaved(true);
       await onSaved();
     } catch (problem) {
@@ -286,6 +298,32 @@ function HowYouPlay({
             {one.label}
           </button>
         ))}
+      </div>
+
+      <p className={styles.label}>What could this table be played in?</p>
+      <p className={styles.fine}>
+        The one thing here that is a hard filter: a table you cannot follow is not
+        a table. Leave it alone and it filters nothing.
+      </p>
+      <div className={home.chips}>
+        {LANGUAGES.map((one) => {
+          const on = languages.includes(one.key);
+          return (
+            <button
+              key={one.key}
+              type="button"
+              aria-pressed={on}
+              className={on ? home.chipOn : home.chip}
+              onClick={() =>
+                setLanguages((current) =>
+                  on ? current.filter((k) => k !== one.key) : [...current, one.key],
+                )
+              }
+            >
+              {one.label}
+            </button>
+          );
+        })}
       </div>
 
       {error ? <p className={styles.error}>{error}</p> : null}

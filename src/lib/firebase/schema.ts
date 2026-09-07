@@ -119,6 +119,37 @@ export type ExperienceKey = (typeof EXPERIENCE)[number]["key"];
 export const experienceRank = (key: ExperienceKey) =>
   EXPERIENCE.findIndex((one) => one.key === key);
 
+/* --------------------------------------------------------------------------
+   What the table is spoken in
+
+   A hard filter, and the only one on this list that is: you cannot play at a
+   table run in a language you do not speak, however well everything else fits.
+
+   Lebanon is the reason the list looks like this. English is the default of the
+   hobby and the language the SRD is in, but a table in Beirut is as likely to
+   run in Arabic or French, and Armenian is a real community here. The vault
+   notes that Arabic-language play is almost entirely unserved, which is an
+   opportunity rather than an afterthought.
+
+   ⚠️ Optional, and **an absent answer never blocks anybody**. A hard filter
+   reading missing data as a clash would empty the site: every profile written
+   before this existed has no languages, and if that meant "shares none" then
+   nobody would match anybody. Silence means "not stated", which is not the same
+   as "speaks nothing".
+   -------------------------------------------------------------------------- */
+
+export const LANGUAGES = [
+  { key: "en", label: "English" },
+  { key: "ar", label: "Arabic" },
+  { key: "fr", label: "French" },
+  { key: "hy", label: "Armenian" },
+] as const;
+
+export type LanguageKey = (typeof LANGUAGES)[number]["key"];
+
+export const languageLabel = (key: string) =>
+  LANGUAGES.find((one) => one.key === key)?.label ?? key;
+
 /* ==========================================================================
    Where somebody will play, and what they will not play through
 
@@ -286,6 +317,13 @@ export type Profile = {
    */
   style?: PlayStyle;
   experience?: ExperienceKey;
+
+  /**
+   * What they can play in. Unlike the two above this is a **hard filter**, and
+   * unlike every other field on this profile an empty answer means "not stated"
+   * rather than "none": see the warning by LANGUAGES.
+   */
+  languages?: LanguageKey[];
 
   /** Denormalised so the rules can enforce the limit. Never edit it by hand. */
   characterCount: number;

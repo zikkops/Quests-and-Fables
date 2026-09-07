@@ -101,7 +101,7 @@ async function makeAdmin(uid) {
   });
 }
 
-async function seedPlayer({ email, username, area, playAreas, week, venues, limits, age, gm, style, experience }) {
+async function seedPlayer({ email, username, area, playAreas, week, venues, limits, age, gm, style, experience, languages }) {
   const uid = await createUser(email);
   const now = Date.now();
 
@@ -120,6 +120,7 @@ async function seedPlayer({ email, username, area, playAreas, week, venues, limi
     characterCount: 0,
     ...(style ? { style } : {}),
     ...(experience ? { experience } : {}),
+    ...(languages ? { languages } : {}),
     ...(gm ? { gm: true } : {}),
     createdAt: now,
     updatedAt: now,
@@ -137,24 +138,28 @@ const WILL_HOST = { public: true, guest: true, host: true };
 const PLAYERS = [
   {
     email: "orla@local", username: "orla_ironbrand", age: 27,
+    languages: ["en", "ar"],
     style: { combat: 3, roleplay: 3, exploration: 2 }, experience: "regular",
     area: "achrafieh", playAreas: ["achrafieh", "gemmayzeh-mar-mikhael", "badaro"],
     week: WEEKDAY_EVENINGS, venues: WILL_HOST, limits: { spiders: "veil" },
   },
   {
     email: "sami@local", username: "sami_h", age: 34,
+    languages: ["en", "fr"],
     style: { combat: 1, roleplay: 4, exploration: 3 }, experience: "veteran",
     area: "hamra-ras-beirut", playAreas: ["hamra-ras-beirut", "achrafieh"],
     week: WEEKDAY_EVENINGS, venues: WILL_VISIT, limits: { "harm-to-children": "line" },
   },
   {
     email: "nadia@local", username: "nadia_k", age: 22,
+    languages: ["en", "ar"],
     style: { combat: 4, roleplay: 1, exploration: 2 }, experience: "some",
     area: "badaro", playAreas: ["badaro", "achrafieh"],
     week: MOST_NIGHTS, venues: WILL_VISIT, limits: {},
   },
   {
     email: "ziad@local", username: "ziad_r", age: 19,
+    languages: ["en"],
     style: { combat: 2, roleplay: 3, exploration: 3 }, experience: "never",
     area: "achrafieh", playAreas: ["achrafieh", "sin-el-fil"],
     week: WEEKDAY_EVENINGS, venues: PUBLIC_ONLY,
@@ -164,6 +169,7 @@ const PLAYERS = [
     /* Deliberately awkward: one night a week, and will not travel far. Good for
        seeing what the overlap looks like when it is nearly empty. */
     email: "rita@local", username: "rita_s", age: 41,
+    languages: ["hy"],
     style: { combat: 0, roleplay: 4, exploration: 4 }, experience: "veteran",
     area: "jounieh", playAreas: ["jounieh"],
     week: THURSDAYS_ONLY, venues: PUBLIC_ONLY, limits: {},
@@ -204,6 +210,7 @@ async function main() {
     area: "achrafieh", playAreas: ["achrafieh", "badaro", "hamra-ras-beirut"],
     week: WEEKDAY_EVENINGS, venues: WILL_HOST, limits: {}, gm: true,
     style: { combat: 2, roleplay: 3, exploration: 3 }, experience: "veteran",
+    languages: ["en", "ar", "fr"],
   });
 
   const players = [];
@@ -270,9 +277,10 @@ async function main() {
     ziad@local     ziad_r          public rooms only, 19, two limits set
     rita@local     rita_s          Jounieh, Thursdays only, will not travel
 
-  Four of the five overlap on weekday evenings around Achrafieh, so they can be
-  made into a party from /admin. Rita is the one who will not fit, which is the
-  more interesting case to look at.
+  Four of the five overlap on weekday evenings around Achrafieh and can be made
+  into a party from /admin. Rita is the one who will not fit, and now for two
+  separate reasons: Thursdays only in Jounieh, and Armenian only against a table
+  that shares English. The blocked case is the one worth looking at.
 
   One party, "Thursday nights in Achrafieh": the four who overlap plus the game
   master, two sessions with the second still open, and notes in both books.

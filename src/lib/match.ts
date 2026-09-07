@@ -2,7 +2,9 @@ import {
   EMPTY_WEEK,
   EXPERIENCE,
   experienceRank,
+  languageLabel,
   STYLE_MAX,
+  type LanguageKey,
   type Limits,
   type PlayStyle,
   type Profile,
@@ -63,6 +65,16 @@ export type PartyProfile = {
    */
   style?: PlayStyle;
   experience?: number;
+  /**
+   * Every language **all** the members who stated any have in common. An
+   * intersection rather than a union: a table's language is one everybody at it
+   * can follow, not one somebody can.
+   *
+   * Absent when nobody has said, and an empty array is meaningful and different:
+   * it means the people here share none, which is a table that cannot be added
+   * to on this axis.
+   */
+  languages?: LanguageKey[];
 };
 
 export const EMPTY_PROFILE: PartyProfile = {
@@ -160,12 +172,24 @@ export function averageExperience(members: Profile[]): number | undefined {
   );
 }
 
+/** The languages common to everybody who stated any, or absent if nobody did. */
+export function sharedLanguages(members: Profile[]): LanguageKey[] | undefined {
+  const stated = members
+    .map((member) => member.languages)
+    .filter((list): list is LanguageKey[] => Boolean(list && list.length > 0));
+
+  if (stated.length === 0) return undefined;
+
+  return stated.reduce((common, list) => common.filter((one) => list.includes(one)));
+}
+
 export const aggregate = (members: Profile[]): PartyProfile => ({
   week: overlap(members.map((member) => member.week)),
   arrangements: arrangements(members),
   limits: mergedLimits(members),
   style: averageStyle(members),
   experience: averageExperience(members),
+  languages: sharedLanguages(members),
 });
 
 /* ==========================================================================
@@ -175,6 +199,7 @@ export const aggregate = (members: Profile[]): PartyProfile => ({
 export type Blocker =
   | { kind: "venue"; detail: string }
   | { kind: "limits"; detail: string }
+  | { kind: "language"; detail: string }
   | { kind: "full"; detail: string }
   | { kind: "closed"; detail: string }
   | { kind: "already"; detail: string };
@@ -281,6 +306,28 @@ function experienceFit(player: Profile, table: PartyProfile): number {
   return 1 - gap / (EXPERIENCE.length - 1);
 }
 
+/**
+ * Whether this player and this table share anything to speak.
+ *
+ * ⚠️ Silence never blocks. Both sides have to have actually said something for
+ * a clash to exist, because a hard filter that reads missing data as a mismatch
+ * would hide every table from every profile written before this field existed.
+ * The cost of being wrong in the other direction is somebody seeing a table
+ * they cannot follow and moving on, which is recoverable.
+ */
+function languageClash(player: Profile, table: PartyProfile): string | null {
+  const theirs = table.languages;
+  const mine = player.languages;
+
+  if (!theirs || theirs.length === 0) return null;
+  if (!mine || mine.length === 0) return null;
+
+  if (mine.some((one) => theirs.includes(one))) return null;
+
+  const spoken = theirs.map(languageLabel).join(" or ");
+  return `This table plays in ${spoken}, which you have not said you speak.`;
+}
+
 export function fitFor(player: Profile, party: Party): Fit {
   const blockers: Blocker[] = [];
   const table = party.profile ?? EMPTY_PROFILE;
@@ -310,6 +357,9 @@ export function fitFor(player: Profile, party: Party): Fit {
 
   const limits = limitClash(player.limits, table.limits);
   if (limits) blockers.push({ kind: "limits", detail: limits });
+
+  const language = languageClash(player, table);
+  if (language) blockers.push({ kind: "language", detail: language });
 
   /*
     The score, in the order these things actually matter.

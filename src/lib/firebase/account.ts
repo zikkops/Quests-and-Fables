@@ -117,7 +117,7 @@ export async function updateProfile(
     Pick<
       Profile,
       | "email" | "phone" | "area" | "playAreas" | "week" | "venues" | "limits"
-      | "style" | "experience"
+      | "style" | "experience" | "languages"
     >
   >,
 ): Promise<void> {
