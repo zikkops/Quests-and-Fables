@@ -29,12 +29,18 @@ rules_version = '2';
      game master reads both and writes only their own. Enforced on every note.
 
   4. **Five characters, enforced here rather than trusted from the client.**
-     Rules cannot count a collection, so the count is a field on the profile and
-     `getAfter()` checks that a character create and its counter increment
-     happen in the same batch. Try the create on its own and it fails.
+     Rules cannot count a collection, so the count is a field on the profile.
+     `getAfter()` checks that a create and its increment happen in one batch,
+     and a decrement has to name the document it removed so the rule can see
+     that document existed before and is gone after. Neither half is optional:
+     without the first the counter never rises, without the second it can be
+     wound back to zero for free and the limit means nothing.
 
-  Test with the emulator before touching production:
-      firebase emulators:start --only firestore
+  **Every rule in this file is tested.** `npm run test:rules` runs 46 cases
+  against the emulator. Each one is what somebody with the SDK and a text
+  editor can do, rather than what the app happens to do, because the app being
+  well behaved is not evidence. Run it before deploying: a rules mistake does
+  not throw, it quietly opens something.
 */
 
 service cloud.firestore {
@@ -150,7 +156,8 @@ service cloud.firestore {
                     && request.resource.data.keys().hasOnly([
                          'uid', 'username', 'email', 'phone', 'dob', 'area',
                          'playAreas', 'week', 'venues', 'limits',
-                         'characterCount', 'gm', 'createdAt', 'updatedAt'
+                         'characterCount', 'gm', 'createdAt', 'updatedAt',
+                         'removed'
                        ])
                     // The seven day clock. Written out rather than calling
                     // inGoodStanding(), because on an update the profile is
@@ -185,40 +192,32 @@ service cloud.firestore {
                                      == resource.data.get('gm', false))
                     && request.resource.data.uid == resource.data.uid
                     /*
-                      ⚠️ **KNOWN HOLE, 2026-09-07. The five character limit is
-                      bypassable and the header's claim four is currently false.**
+                      A decrement has to prove a deletion.
 
-                      A create must increment the counter, and a delete must
-                      decrement it. But nothing requires a decrement to be
-                      accompanied by a delete, and this rule allows a bare
-                      update to lower it. So: make five characters, decrement
-                      the counter five times with plain profile writes, make
-                      five more. Repeat. The client never does this; the SDK and
-                      the REST API are right there for anybody who wants to, and
-                      "a rule that lives in a component is a suggestion" is this
-                      file's own argument.
+                      The counter is the limit's only enforcement point, because
+                      rules cannot count a collection. That made it the weak
+                      point too: a create must increment it, and a delete must
+                      decrement it, but for a while nothing required a decrement
+                      to be *accompanied* by a delete. Five characters, five bare
+                      profile writes taking the counter back to zero, five more
+                      characters, repeat. The client never did it; the SDK is
+                      right there for anybody who wants to.
 
-                      Rules cannot count a collection, so the counter itself is
-                      the right shape. The fix is to make a decrement prove a
-                      deletion, which needs the id in the same write:
-
-                        deleteCharacter() sends `removed: <characterId>` beside
-                        the decrement, and this rule adds
-
-                          && (request.resource.data.characterCount
-                                >= resource.data.characterCount
-                              || !existsAfter(/databases/$(database)/documents
-                                   /profiles/$(uid)/characters
-                                   /$(request.resource.data.removed)))
-
-                      Left undone deliberately: it changes the client's write
-                      contract, and there is no emulator on this machine to test
-                      a rules change against. Deploying an untested rule to a
-                      live database risks locking real players out of their own
-                      profiles, which is worse than the abuse it prevents.
-                      Cost of the hole today: unbounded character documents on
-                      one account. No data is exposed by it.
+                      So a write that lowers the counter has to name the document
+                      it removed, and that document has to have existed before
+                      and be gone after. Naming one that never existed fails the
+                      first half; naming one and not deleting it fails the
+                      second. A write that does not lower the counter never
+                      evaluates any of this.
                     */
+                    && (
+                         request.resource.data.characterCount
+                           >= resource.data.characterCount
+                         || (
+                              exists(/databases/$(database)/documents/profiles/$(uid)/characters/$(request.resource.data.removed))
+                              && !existsAfter(/databases/$(database)/documents/profiles/$(uid)/characters/$(request.resource.data.removed))
+                            )
+                       )
                     // The counter is the limit's only enforcement point, so it
                     // may only ever move by one, and only inside the range.
                     && request.resource.data.characterCount >= 0

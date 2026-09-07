@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:rules": "npx --yes firebase-tools@15 emulators:exec --only firestore --project quests-and-fables-rules-test \"node test/rules.mjs\""
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
@@ -17,6 +18,7 @@
     "react-dom": "^19.2.8"
   },
   "devDependencies": {
+    "@firebase/rules-unit-testing": "^5.0.2",
     "@types/node": "^20",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",

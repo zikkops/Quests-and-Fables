@@ -195,6 +195,10 @@ export async function deleteCharacter(uid: string, id: string): Promise<void> {
   batch.delete(doc(instance, PATHS.characters(uid), id));
   batch.update(doc(instance, PATHS.profiles, uid), {
     characterCount: increment(-1),
+    /* Names what this write removed, so the rules can check the document
+       existed before and is gone after. Without it a decrement proves nothing
+       and the five character limit is a suggestion. */
+    removed: id,
     updatedAt: Date.now(),
   });
 
