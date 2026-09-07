@@ -1,4 +1,15 @@
-import { EMPTY_WEEK, type Limits, type Profile, type Venues, type Week } from "./firebase/schema";
+import {
+  EMPTY_WEEK,
+  EXPERIENCE,
+  experienceRank,
+  STYLE_MAX,
+  type Limits,
+  type PlayStyle,
+  type Profile,
+  type StyleAxis,
+  type Venues,
+  type Week,
+} from "./firebase/schema";
 import { overlap, PARTY_MAX, slotsIn, type Party, type Slot } from "./party";
 
 /**
@@ -42,6 +53,16 @@ export type PartyProfile = {
   arrangements: Arrangement[];
   /** The strictest thing anyone has said about each topic. */
   limits: Limits;
+  /**
+   * The table's average taste, and how long its members have been playing.
+   *
+   * Averages rather than the strictest answer, which is the opposite of how
+   * `limits` works, and deliberately: a limit is a floor somebody set and a
+   * taste is a middle everybody lands on. Absent when nobody at the table has
+   * answered, which is why both are optional.
+   */
+  style?: PlayStyle;
+  experience?: number;
 };
 
 export const EMPTY_PROFILE: PartyProfile = {
@@ -113,10 +134,38 @@ export function mergedLimits(members: Profile[]): Limits {
   return merged;
 }
 
+/** The table's average on each axis, or absent if nobody has said. */
+export function averageStyle(members: Profile[]): PlayStyle | undefined {
+  const said = members.filter((member) => member.style);
+  if (said.length === 0) return undefined;
+
+  const mean = (axis: StyleAxis) =>
+    said.reduce((total, member) => total + (member.style?.[axis] ?? 0), 0) / said.length;
+
+  return {
+    combat: mean("combat"),
+    roleplay: mean("roleplay"),
+    exploration: mean("exploration"),
+  };
+}
+
+/** The table's average experience as a rank, or absent if nobody has said. */
+export function averageExperience(members: Profile[]): number | undefined {
+  const said = members.filter((member) => member.experience);
+  if (said.length === 0) return undefined;
+
+  return (
+    said.reduce((total, member) => total + experienceRank(member.experience!), 0)
+    / said.length
+  );
+}
+
 export const aggregate = (members: Profile[]): PartyProfile => ({
   week: overlap(members.map((member) => member.week)),
   arrangements: arrangements(members),
   limits: mergedLimits(members),
+  style: averageStyle(members),
+  experience: averageExperience(members),
 });
 
 /* ==========================================================================
@@ -191,6 +240,47 @@ function limitClash(player: Limits, table: Limits): string | null {
     : `This table expects ${clashes.length} topics you have ruled out entirely.`;
 }
 
+/**
+ * How close this player's taste is to the table's, from 0 to 1.
+ *
+ * Deliberately gentle. It is worth at most 20 points against 100 for the hours
+ * and 40 for the area, because a table you can reach on a night you are free
+ * beats a table that likes exactly what you like and meets on a Tuesday you
+ * cannot do. Scope v1 puts them in that order and so does this.
+ *
+ * Returns the **midpoint** when either side has not said, not zero. Zero was
+ * wrong and measurably so: it put a player who answered nothing below a player
+ * whose taste actively clashed, so declining to answer cost more than being a
+ * poor fit. An unknown is an unknown, and the middle is what that is worth.
+ */
+function toneFit(player: Profile, table: PartyProfile): number {
+  if (!player.style || !table.style) return 0.5;
+
+  const gap = (["combat", "roleplay", "exploration"] as StyleAxis[]).reduce(
+    (total, axis) => total + Math.abs(player.style![axis] - table.style![axis]),
+    0,
+  );
+
+  /* Three axes, at most STYLE_MAX apart on each. */
+  return 1 - gap / (3 * STYLE_MAX);
+}
+
+/**
+ * Proximity, never equality.
+ *
+ * A mix of experience at one table is healthy and a first-timer sat with four
+ * veterans is not, which is a statement about distance rather than about
+ * matching like with like.
+ *
+ * Midpoint when unknown, for the same reason as above.
+ */
+function experienceFit(player: Profile, table: PartyProfile): number {
+  if (!player.experience || table.experience === undefined) return 0.5;
+
+  const gap = Math.abs(experienceRank(player.experience) - table.experience);
+  return 1 - gap / (EXPERIENCE.length - 1);
+}
+
 export function fitFor(player: Profile, party: Party): Fit {
   const blockers: Blocker[] = [];
   const table = party.profile ?? EMPTY_PROFILE;
@@ -233,6 +323,8 @@ export function fitFor(player: Profile, party: Party): Fit {
     (worksWhenTheyPlay ? 100 : 0)
     + slots.length * 10
     + (nearby ? 40 : 0)
+    + toneFit(player, table) * 20
+    + experienceFit(player, table) * 10
     + (PARTY_MAX - seatsLeft) * 2;
 
   return { slots, worksWhenTheyPlay, nearby, seatsLeft, blockers, score };

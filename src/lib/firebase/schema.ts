@@ -67,6 +67,59 @@ export const EMPTY_WEEK: Week = ["0000", "0000", "0000", "0000", "0000", "0000",
 
 
 /* ==========================================================================
+   How somebody likes to play
+
+   Preference data, not safety data, and the difference decides how it is used:
+   these are **weights and never filters**. Venue and limits keep somebody out
+   of a table; wanting more combat than the table does is a reason to be ranked
+   below a better fit, never a reason not to be shown it. A mixed table is a
+   normal table.
+
+   Both are optional. Profiles written before these existed have neither, and a
+   player who skips the question is not guessing: an absent answer contributes
+   nothing to the score rather than being treated as a middling one.
+   ========================================================================== */
+
+export const STYLE_AXES = [
+  {
+    key: "combat",
+    label: "Combat",
+    hint: "Fights, tactics, and the dice that decide them.",
+  },
+  {
+    key: "roleplay",
+    label: "Roleplay",
+    hint: "Talking in character, and the hour in the tavern.",
+  },
+  {
+    key: "exploration",
+    label: "Exploration",
+    hint: "Maps, mysteries, and poking at things.",
+  },
+] as const;
+
+export type StyleAxis = (typeof STYLE_AXES)[number]["key"];
+
+/** Nought to four on each, independently. Not a budget to divide up. */
+export type PlayStyle = Record<StyleAxis, number>;
+
+export const STYLE_STEPS = ["Not for me", "A little", "Some", "A lot", "As much as possible"];
+
+export const STYLE_MAX = STYLE_STEPS.length - 1;
+
+export const EXPERIENCE = [
+  { key: "never", label: "Never played", hint: "And that is a fine way to start." },
+  { key: "some", label: "A few sessions" },
+  { key: "regular", label: "I play regularly" },
+  { key: "veteran", label: "Years of it" },
+] as const;
+
+export type ExperienceKey = (typeof EXPERIENCE)[number]["key"];
+
+export const experienceRank = (key: ExperienceKey) =>
+  EXPERIENCE.findIndex((one) => one.key === key);
+
+/* ==========================================================================
    Where somebody will play, and what they will not play through
 
    Both are safety data before they are preference data, which is why they live
@@ -224,6 +277,15 @@ export type Profile = {
    * the least power in the room to do the hardest thing in it.
    */
   limits: Limits;
+
+  /**
+   * How they like to play, and how much they have played. Both optional: a
+   * profile from before these existed has neither, and skipping the question is
+   * a real answer rather than a middling one. Weights in matching, never
+   * filters. See `src/lib/match.ts`.
+   */
+  style?: PlayStyle;
+  experience?: ExperienceKey;
 
   /** Denormalised so the rules can enforce the limit. Never edit it by hand. */
   characterCount: number;

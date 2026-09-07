@@ -8,6 +8,13 @@ import { updateProfile } from "@/lib/firebase/account";
 import { useSession } from "@/lib/firebase/session";
 import {
   DEFAULT_VENUES,
+  EXPERIENCE,
+  STYLE_AXES,
+  STYLE_MAX,
+  STYLE_STEPS,
+  type ExperienceKey,
+  type PlayStyle,
+  type StyleAxis,
   LIMIT_TOPICS,
   phoneProblem,
   VENUES,
@@ -153,6 +160,13 @@ export default function AccountHome() {
 
       <Availability uid={user.uid} week={profile.week} onSaved={refresh} />
 
+      <HowYouPlay
+        uid={user.uid}
+        style={profile.style}
+        experience={profile.experience}
+        onSaved={refresh}
+      />
+
       <Safety
         uid={user.uid}
         venues={profile.venues}
@@ -168,6 +182,117 @@ export default function AccountHome() {
 /* ==========================================================================
    The three editable slices
    ========================================================================== */
+
+/**
+ * How you like to play, and how much you have played.
+ *
+ * The only section here that is **preference and not safety**, which is why it
+ * is the only one that can be left alone: venue and limits keep you out of a
+ * table, taste only decides the order tables are shown in. Saying nothing is a
+ * real answer, and `match.ts` treats an unanswered question as neutral rather
+ * than middling, so skipping it does not quietly push somebody down every list.
+ *
+ * Three independent sliders rather than a budget to divide between them.
+ * Somebody who wants a lot of everything is describing a real table.
+ */
+function HowYouPlay({
+  uid,
+  style: initialStyle,
+  experience: initialExperience,
+  onSaved,
+}: {
+  uid: string;
+  style?: PlayStyle;
+  experience?: ExperienceKey;
+  onSaved: () => Promise<void>;
+}) {
+  const [style, setStyle] = useState<PlayStyle | undefined>(initialStyle);
+  const [experience, setExperience] = useState<ExperienceKey | undefined>(initialExperience);
+  const [busy, setBusy] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const dirty =
+    JSON.stringify(style ?? null) !== JSON.stringify(initialStyle ?? null)
+    || experience !== initialExperience;
+
+  const set = (axis: StyleAxis, value: number) =>
+    setStyle((current) => ({
+      combat: current?.combat ?? 2,
+      roleplay: current?.roleplay ?? 2,
+      exploration: current?.exploration ?? 2,
+      [axis]: value,
+    }));
+
+  const submit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setError(null);
+    setBusy(true);
+
+    try {
+      await updateProfile(uid, { style, experience });
+      setSaved(true);
+      await onSaved();
+    } catch (problem) {
+      setError((problem as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <form className={`${styles.card} ${styles.wide}`} onSubmit={submit}>
+      <h2 className={styles.cardTitle}>How you like to play</h2>
+      <p className={styles.cardBody}>
+        This one is a preference, not a rule. It nudges the order tables are
+        shown in and nothing else: it will never keep you out of a table, and
+        leaving it alone costs you nothing.
+      </p>
+
+      <div className={home.styleAxes}>
+        {STYLE_AXES.map((axis) => {
+          const value = style?.[axis.key] ?? 2;
+          return (
+            <label key={axis.key} className={home.styleAxis}>
+              <span className={styles.label}>{axis.label}</span>
+              <span className={styles.fine}>{axis.hint}</span>
+              <input
+                type="range"
+                min={0}
+                max={STYLE_MAX}
+                step={1}
+                value={value}
+                className={home.slider}
+                onChange={(event) => set(axis.key, Number(event.target.value))}
+              />
+              <span className={home.styleValue}>
+                {style ? STYLE_STEPS[value] : "Not said"}
+              </span>
+            </label>
+          );
+        })}
+      </div>
+
+      <p className={styles.label}>How much have you played?</p>
+      <div className={home.chips}>
+        {EXPERIENCE.map((one) => (
+          <button
+            key={one.key}
+            type="button"
+            aria-pressed={experience === one.key}
+            className={experience === one.key ? home.chipOn : home.chip}
+            onClick={() => setExperience(experience === one.key ? undefined : one.key)}
+          >
+            {one.label}
+          </button>
+        ))}
+      </div>
+
+      {error ? <p className={styles.error}>{error}</p> : null}
+      <Save dirty={dirty} busy={busy} saved={saved} />
+    </form>
+  );
+}
 
 /** A save button that knows whether there is anything to save. */
 function Save({ dirty, busy, saved }: { dirty: boolean; busy: boolean; saved: boolean }) {

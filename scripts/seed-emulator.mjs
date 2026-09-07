@@ -101,7 +101,7 @@ async function makeAdmin(uid) {
   });
 }
 
-async function seedPlayer({ email, username, area, playAreas, week, venues, limits, age, gm }) {
+async function seedPlayer({ email, username, area, playAreas, week, venues, limits, age, gm, style, experience }) {
   const uid = await createUser(email);
   const now = Date.now();
 
@@ -118,6 +118,8 @@ async function seedPlayer({ email, username, area, playAreas, week, venues, limi
     venues,
     limits,
     characterCount: 0,
+    ...(style ? { style } : {}),
+    ...(experience ? { experience } : {}),
     ...(gm ? { gm: true } : {}),
     createdAt: now,
     updatedAt: now,
@@ -135,21 +137,25 @@ const WILL_HOST = { public: true, guest: true, host: true };
 const PLAYERS = [
   {
     email: "orla@local", username: "orla_ironbrand", age: 27,
+    style: { combat: 3, roleplay: 3, exploration: 2 }, experience: "regular",
     area: "achrafieh", playAreas: ["achrafieh", "gemmayzeh-mar-mikhael", "badaro"],
     week: WEEKDAY_EVENINGS, venues: WILL_HOST, limits: { spiders: "veil" },
   },
   {
     email: "sami@local", username: "sami_h", age: 34,
+    style: { combat: 1, roleplay: 4, exploration: 3 }, experience: "veteran",
     area: "hamra-ras-beirut", playAreas: ["hamra-ras-beirut", "achrafieh"],
     week: WEEKDAY_EVENINGS, venues: WILL_VISIT, limits: { "harm-to-children": "line" },
   },
   {
     email: "nadia@local", username: "nadia_k", age: 22,
+    style: { combat: 4, roleplay: 1, exploration: 2 }, experience: "some",
     area: "badaro", playAreas: ["badaro", "achrafieh"],
     week: MOST_NIGHTS, venues: WILL_VISIT, limits: {},
   },
   {
     email: "ziad@local", username: "ziad_r", age: 19,
+    style: { combat: 2, roleplay: 3, exploration: 3 }, experience: "never",
     area: "achrafieh", playAreas: ["achrafieh", "sin-el-fil"],
     week: WEEKDAY_EVENINGS, venues: PUBLIC_ONLY,
     limits: { "graphic-violence": "veil", torture: "line" },
@@ -158,6 +164,7 @@ const PLAYERS = [
     /* Deliberately awkward: one night a week, and will not travel far. Good for
        seeing what the overlap looks like when it is nearly empty. */
     email: "rita@local", username: "rita_s", age: 41,
+    style: { combat: 0, roleplay: 4, exploration: 4 }, experience: "veteran",
     area: "jounieh", playAreas: ["jounieh"],
     week: THURSDAYS_ONLY, venues: PUBLIC_ONLY, limits: {},
   },
@@ -196,6 +203,7 @@ async function main() {
     email: "gm@local", username: "bassam_gm", age: 38,
     area: "achrafieh", playAreas: ["achrafieh", "badaro", "hamra-ras-beirut"],
     week: WEEKDAY_EVENINGS, venues: WILL_HOST, limits: {}, gm: true,
+    style: { combat: 2, roleplay: 3, exploration: 3 }, experience: "veteran",
   });
 
   const players = [];

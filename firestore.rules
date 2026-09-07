@@ -157,7 +157,7 @@ service cloud.firestore {
                          'uid', 'username', 'email', 'phone', 'dob', 'area',
                          'playAreas', 'week', 'venues', 'limits',
                          'characterCount', 'gm', 'createdAt', 'updatedAt',
-                         'removed'
+                         'removed', 'style', 'experience'
                        ])
                     // The seven day clock. Written out rather than calling
                     // inGoodStanding(), because on an update the profile is

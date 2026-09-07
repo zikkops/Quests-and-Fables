@@ -182,6 +182,16 @@ await check("FIX: createdAt cannot be wound forward to refresh the grace week", 
   await assertFails(updateDoc(doc(unverified("bob"), "profiles", "bob"), { createdAt: Date.now() }));
 });
 
+await check("play style and experience can be saved", async () => {
+  await assertSucceeds(
+    updateDoc(doc(player("bob"), "profiles", "bob"), {
+      style: { combat: 3, roleplay: 4, exploration: 1 },
+      experience: "regular",
+      updatedAt: Date.now(),
+    }),
+  );
+});
+
 await check("FIX: arbitrary fields are refused", async () => {
   await assertFails(updateDoc(doc(player("bob"), "profiles", "bob"), { isAdmin: true }));
   await assertFails(updateDoc(doc(player("bob"), "profiles", "bob"), { note: "x".repeat(50) }));

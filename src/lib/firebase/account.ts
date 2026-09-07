@@ -114,7 +114,11 @@ export async function getProfile(uid: string): Promise<Profile | null> {
 export async function updateProfile(
   uid: string,
   patch: Partial<
-    Pick<Profile, "email" | "phone" | "area" | "playAreas" | "week" | "venues" | "limits">
+    Pick<
+      Profile,
+      | "email" | "phone" | "area" | "playAreas" | "week" | "venues" | "limits"
+      | "style" | "experience"
+    >
   >,
 ): Promise<void> {
   const clean = { ...patch, updatedAt: Date.now() };
