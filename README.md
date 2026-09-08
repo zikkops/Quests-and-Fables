@@ -115,6 +115,35 @@ Two things that will catch you out:
   `firebase-tools` parent behind, holding 8080 and 9099. `netstat -ano | grep
   8080` finds the pid.
 
+## Deploying
+
+The site is on **Hostinger**, at questsandfables.com, built from this repository
+by their build pipeline. Firestore rules are **not** part of that deploy: they
+go up separately with `npx firebase-tools deploy --only firestore:rules`, and
+forgetting that is how the site ends up live against yesterday's rules.
+
+Three things about the deploy that are not obvious:
+
+- **The Next config is `next.config.mjs`, and it must stay JavaScript.** A
+  TypeScript config cannot be loaded as it stands. Next has to compile it first,
+  and older versions did that by writing a temporary `<hash>.next.config.js`
+  into the project directory, importing it, then deleting it. Hostinger failed
+  that round trip twice, with `Cannot find module
+  '/home/.../repository/6aa03eca16f4a.next.config'`: the build looking for a
+  scratch file that never survived long enough to be read. Nothing in the config
+  is worth a compile step, so there is no longer one. Renaming it back to
+  `.ts` brings the failure back.
+- **`NEXT_PUBLIC_FIREBASE_EMULATOR` must not be set on the host.** It belongs
+  to `dev:emulator` and nowhere else. It is harmless there now, since the
+  `distDir` switch it drives is development-only, but if it appears in the
+  Hostinger environment it means a local env file was copied up, which is worth
+  knowing for its own sake.
+- **The domain has to be on Firebase's authorized list.** Authentication →
+  Settings → Authorized domains, or `sendEmailVerification` throws
+  `auth/unauthorized-continue-uri` and nobody can verify an address. Localhost
+  is on that list by default, which is why this only ever shows up in
+  production.
+
 ## Stack
 
 | Layer | Choice |
@@ -921,7 +950,7 @@ is tuned to this particular render; replace the image and the percentages in
 
 ## Copy style
 
-Beyond rule 14: no exclamation marks, no "revolutionary" or "seamless", no
+Beyond rule 15: no exclamation marks, no "revolutionary" or "seamless", no
 "simply" or "just" in front of something that isn't simple. British spelling
 (`colour`, `armour`, `centre`). "Game master" written out in copy, never "GM" on
 a first mention and never "DM" at all. Prices and party sizes in words when they

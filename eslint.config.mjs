@@ -8,7 +8,18 @@ const eslintConfig = [
   ...coreWebVitals,
   ...typescript,
   {
-    ignores: ["node_modules/**", ".next/**", "out/**", "build/**", "next-env.d.ts"],
+    /* Build output, not source. `.next-emulator` is the emulator mode's
+       distDir, and belongs here for the same reason as `.next`: it is
+       gitignored already, and linting Turbopack's own chunks reports hundreds
+       of errors about code nobody wrote. */
+    ignores: [
+      "node_modules/**",
+      ".next/**",
+      ".next-emulator/**",
+      "out/**",
+      "build/**",
+      "next-env.d.ts",
+    ],
   },
 ];
 
