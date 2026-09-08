@@ -15,6 +15,7 @@ import { findArea } from "@/data/lebanon";
 import { describeSlot, PARTY_MAX, type Party } from "@/lib/party";
 import { fitFor, fits, type Fit } from "@/lib/match";
 import { limitLabel, type LimitKey } from "@/lib/firebase/schema";
+import GmStanding from "./GmStanding";
 import styles from "./Parties.module.css";
 import one from "./OneTable.module.css";
 
@@ -216,6 +217,8 @@ export default function OneTable({ partyId }: { partyId: string }) {
           them, which is what the evening will actually be like.
         </p>
       </section>
+
+      {party.gmId ? <GmStanding gmId={party.gmId} /> : null}
 
       {limits.length > 0 ? (
         <section className={one.card}>

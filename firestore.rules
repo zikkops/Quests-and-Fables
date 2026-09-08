@@ -36,7 +36,7 @@ rules_version = '2';
      without the first the counter never rises, without the second it can be
      wound back to zero for free and the limit means nothing.
 
-  **Every rule in this file is tested.** `npm run test:rules` runs 73 cases
+  **Every rule in this file is tested.** `npm run test:rules` runs 86 cases
   against the emulator. Each one is what somebody with the SDK and a text
   editor can do, rather than what the app happens to do, because the app being
   well behaved is not evidence. Run it before deploying: a rules mistake does
@@ -619,6 +619,142 @@ service cloud.firestore {
        with its own rules written beside it, nothing else in this database is
        reachable from a browser.
        -------------------------------------------------------------------- */
+    /* ======================================================================
+       What a table says about the game master who ran it
+
+       The tally is public. That was decided with the objection on the table:
+       nobody here picks their own game master, the house assigns them, so a
+       public number buys a player nothing they can act on, and it attaches a
+       score to a named person in a small city out of a handful of evenings.
+       Public it is. These rules are what make it survivable.
+
+       The hard problem is that a public counter written by a browser is a
+       counter a browser can lie to. There is no server and no Admin SDK here,
+       so it is solved the way the character limit is: the tally may only move
+       in lockstep with a private rating document created in the same write, and
+       the rules read that document with getAfter to check the arithmetic. A
+       client cannot add two, cannot add one twice, and cannot claim a yes it
+       did not give.
+
+       Individual ratings are not public. A list of who said what is a list of
+       who said what, and four players can already infer a lot from an average
+       that moves. That is the honest limit of this, and why the page shows
+       nothing at all until three ratings exist.
+       ====================================================================== */
+    match /gmRatings/{gmId} {
+
+      function ratingAfter() {
+        return getAfter(
+          /databases/$(database)/documents/gmRatings/$(gmId)/ratings/$(request.auth.uid)
+        ).data;
+      }
+
+      /*
+        A rating is being created by this same write, and there was not one
+        before. Both halves matter: without `exists` being false, somebody
+        could bump the tally again and again against a rating they wrote once.
+      */
+      function ratingLandsNow() {
+        return signedIn()
+               && !exists(
+                    /databases/$(database)/documents/gmRatings/$(gmId)/ratings/$(request.auth.uid)
+                  )
+               && existsAfter(
+                    /databases/$(database)/documents/gmRatings/$(gmId)/ratings/$(request.auth.uid)
+                  );
+      }
+
+      function party(partyId) {
+        return get(/databases/$(database)/documents/parties/$(partyId)).data;
+      }
+
+      /*
+        You may rate the game master of a table you actually played at.
+
+        `role == 'player'` is what stops a game master rating themselves, since
+        their own membership says 'gm', and rule 7 already keeps them out of
+        playerIds. `status == 'playing'` is what stops a party rating somebody
+        before a single evening has happened.
+      */
+      function playedUnder(partyId) {
+        return party(partyId).gmId == gmId
+               && party(partyId).status == 'playing'
+               && get(
+                    /databases/$(database)/documents/parties/$(partyId)/members/$(request.auth.uid)
+                  ).data.role == 'player';
+      }
+
+      function mayRate() {
+        return ratingLandsNow()
+               && ratingAfter().at is int
+               && playedUnder(ratingAfter().partyId);
+      }
+
+      function shape() {
+        return request.resource.data.keys()
+                 .hasOnly(['count', 'prepared', 'fair', 'safe', 'again', 'updatedAt'])
+               && request.resource.data.updatedAt is int;
+      }
+
+      /* Public, which is the whole point and the whole risk. */
+      allow read: if true;
+
+      /* The first rating this game master has ever had. */
+      allow create: if mayRate()
+                    && shape()
+                    && request.resource.data.count == 1
+                    && request.resource.data.prepared == (ratingAfter().prepared ? 1 : 0)
+                    && request.resource.data.fair == (ratingAfter().fair ? 1 : 0)
+                    && request.resource.data.safe == (ratingAfter().safe ? 1 : 0)
+                    && request.resource.data.again == (ratingAfter().again ? 1 : 0);
+
+      /*
+        Every later one. Exactly one more rating, and each axis moves by exactly
+        what that rating said and nothing else.
+      */
+      allow update: if mayRate()
+                    && shape()
+                    && request.resource.data.count == resource.data.count + 1
+                    && request.resource.data.prepared
+                         == resource.data.prepared + (ratingAfter().prepared ? 1 : 0)
+                    && request.resource.data.fair
+                         == resource.data.fair + (ratingAfter().fair ? 1 : 0)
+                    && request.resource.data.safe
+                         == resource.data.safe + (ratingAfter().safe ? 1 : 0)
+                    && request.resource.data.again
+                         == resource.data.again + (ratingAfter().again ? 1 : 0);
+
+      /* A tally nobody can clear. Deleting it would reset a person's history. */
+      allow delete: if false;
+
+      match /ratings/{raterId} {
+        /*
+          Yours and the house's. Not the game master's, and not the public's:
+          the tally above is the public artefact and this is the evidence under
+          it. A game master who could read these could work out who said no.
+        */
+        allow read: if isOwner(raterId) || isAdmin();
+
+        allow create: if isOwner(raterId)
+                      && inGoodStanding(raterId)
+                      && request.resource.data.keys()
+                           .hasOnly(['prepared', 'fair', 'safe', 'again', 'partyId', 'at'])
+                      && request.resource.data.prepared is bool
+                      && request.resource.data.fair is bool
+                      && request.resource.data.safe is bool
+                      && request.resource.data.again is bool
+                      && request.resource.data.partyId is string
+                      && request.resource.data.at is int;
+
+        /*
+          Written once and it stands. A rating that can be edited is a rating
+          that can be traded, and the tally above has already counted this one:
+          there is no arithmetic here that could take it back.
+        */
+        allow update, delete: if false;
+      }
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

@@ -628,6 +628,124 @@ await check("a game master cannot forge a removal in somebody else's name", asyn
   }));
 });
 
+/* ========================================================================
+   What a table says about the game master who ran it
+   ======================================================================== */
+console.log("");
+console.log("The game master's standing");
+
+async function seedPlayingParty() {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    const database = ctx.firestore();
+    await setDoc(doc(database, "parties", "p4"), {
+      name: "Played a few", area: "achrafieh", status: "playing",
+      playerIds: ["bob", "carol", "dan", "erin"], gmId: "gmR",
+    });
+    for (const uid of ["bob", "carol", "dan", "erin"]) {
+      await setDoc(doc(database, "parties/p4/members", uid), { role: "player" });
+    }
+    await setDoc(doc(database, "parties/p4/members", "gmR"), { role: "gm" });
+
+    /* A table that has not played yet, for the "not until you have" case. */
+    await setDoc(doc(database, "parties", "p5"), {
+      name: "Not yet", area: "achrafieh", status: "assigned",
+      playerIds: ["bob", "carol", "dan", "erin"], gmId: "gmS",
+    });
+    await setDoc(doc(database, "parties/p5/members", "bob"), { role: "player" });
+    await setDoc(doc(database, "parties/p5/members", "gmS"), { role: "gm" });
+  });
+}
+await seedPlayingParty();
+
+/** The tally and the rating together, which is the only legal shape. */
+const rateWith = (database, gmId, uid, answers, tally, partyId = "p4") => {
+  const batch = writeBatch(database);
+  batch.set(doc(database, "gmRatings", gmId), { ...tally, updatedAt: Date.now() });
+  batch.set(doc(database, `gmRatings/${gmId}/ratings`, uid), {
+    prepared: true, fair: true, safe: true, again: true, partyId, at: Date.now(), ...answers,
+  });
+  return batch.commit();
+};
+
+await check("anybody can read a game master's standing", async () => {
+  await assertSucceeds(getDoc(doc(stranger(), "gmRatings", "gmR")));
+});
+
+await check("a player who played rates the game master once", async () => {
+  await assertSucceeds(rateWith(player("bob"), "gmR", "bob", {}, {
+    count: 1, prepared: 1, fair: 1, safe: 1, again: 1,
+  }));
+});
+
+await check("the tally cannot be moved without a rating behind it", async () => {
+  await assertFails(setDoc(doc(player("carol"), "gmRatings", "gmR"), {
+    count: 99, prepared: 99, fair: 99, safe: 99, again: 99, updatedAt: Date.now(),
+  }));
+});
+
+await check("a rating cannot claim a yes it did not give", async () => {
+  /* Says no to everything, tries to add one to every axis anyway. */
+  await assertFails(rateWith(player("carol"), "gmR", "carol",
+    { prepared: false, fair: false, safe: false, again: false },
+    { count: 2, prepared: 2, fair: 2, safe: 2, again: 2 }));
+});
+
+await check("a rating counts as one, never two", async () => {
+  await assertFails(rateWith(player("carol"), "gmR", "carol", {}, {
+    count: 3, prepared: 3, fair: 3, safe: 3, again: 3,
+  }));
+});
+
+await check("a no is recorded as a no", async () => {
+  await assertSucceeds(rateWith(player("carol"), "gmR", "carol",
+    { again: false },
+    { count: 2, prepared: 2, fair: 2, safe: 2, again: 1 }));
+});
+
+await check("nobody rates the same game master twice", async () => {
+  await assertFails(rateWith(player("bob"), "gmR", "bob", {}, {
+    count: 3, prepared: 3, fair: 3, safe: 3, again: 2,
+  }));
+});
+
+await check("a rating stands: it cannot be edited or withdrawn", async () => {
+  await assertFails(updateDoc(doc(player("bob"), "gmRatings/gmR/ratings", "bob"), { again: false }));
+  await assertFails(deleteDoc(doc(player("bob"), "gmRatings/gmR/ratings", "bob")));
+  await assertFails(deleteDoc(doc(admin("root"), "gmRatings", "gmR")));
+});
+
+await check("somebody who was never at the table cannot rate", async () => {
+  await assertFails(rateWith(player("nobody"), "gmR", "nobody", {}, {
+    count: 3, prepared: 3, fair: 3, safe: 3, again: 2,
+  }));
+});
+
+await check("a game master cannot rate themselves", async () => {
+  await assertFails(rateWith(player("gmR"), "gmR", "gmR", {}, {
+    count: 3, prepared: 3, fair: 3, safe: 3, again: 2,
+  }));
+});
+
+await check("nobody rates a table that has not played yet", async () => {
+  await assertFails(rateWith(player("bob"), "gmS", "bob", {}, {
+    count: 1, prepared: 1, fair: 1, safe: 1, again: 1,
+  }, "p5"));
+});
+
+await check("a rating cannot be pointed at a party you were not in", async () => {
+  await assertFails(rateWith(player("nobody"), "gmR", "nobody", {}, {
+    count: 3, prepared: 3, fair: 3, safe: 3, again: 2,
+  }, "p1"));
+});
+
+await check("who said what is not public, and not the game master's to read", async () => {
+  await assertFails(getDoc(doc(stranger(), "gmRatings/gmR/ratings", "bob")));
+  await assertFails(getDoc(doc(player("gmR"), "gmRatings/gmR/ratings", "bob")));
+  await assertFails(getDoc(doc(player("carol"), "gmRatings/gmR/ratings", "bob")));
+  await assertSucceeds(getDoc(doc(player("bob"), "gmRatings/gmR/ratings", "bob")));
+  await assertSucceeds(getDoc(doc(admin("root"), "gmRatings/gmR/ratings", "bob")));
+});
+
 await check("the final deny still denies", async () => {
   await assertFails(getDoc(doc(player("bob"), "anythingElse", "x")));
   await assertFails(setDoc(doc(admin("root"), "anythingElse", "x"), { a: 1 }));

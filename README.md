@@ -997,6 +997,45 @@ measured rather than guessed, with a headless browser at 390x844 driving the
 local production build, checking every element's box and hit testing the
 invisible targets.
 
+## The game master's standing
+
+Players answer four questions about the game master who ran their table, and
+**the totals are public**. That was decided with the objection stated, so the
+objection belongs here rather than in a commit nobody rereads: nobody browsing
+this site picks their own game master, the house assigns them, so a public
+number buys a player nothing they can act on. What it does buy is a score
+attached to a named person in a small city, assembled from a handful of
+evenings. Mark chose public knowing that. Everything below is the shape that
+makes it survivable, and none of it is decoration.
+
+- **Four questions, no star score, no comment box.** A single number invites a
+  scoreboard and collects nothing anybody can act on. Public free text about a
+  named person is the part that turns a rating into a pile-on. Anything needing
+  words is a report, which goes to a person rather than to a page.
+- **Nothing is shown below three ratings.** Not a provisional figure, not a
+  percentage with an asterisk. Two disappointed players out of three is thirty
+  three percent on a page and is also just a Tuesday that went badly.
+- **Counts, never an average.** "Nine of eleven would play with them again" can
+  be weighed. A rounded 4.1 invites comparing two people whose numbers came out
+  of different rooms.
+- **One rating each, and it stands.** A rating that can be edited is a rating
+  that can be traded.
+
+The interesting part is that a public counter written by a browser is a counter
+a browser can lie to, and there is no server here to stop it. It is solved the
+way the character limit is. The tally may only move in lockstep with a private
+rating document created in the same write, and the rules read that document
+with `getAfter` to check the arithmetic against it. A client cannot add two,
+cannot add one twice, cannot claim a yes it did not give, cannot rate a table it
+never sat at, cannot rate before a single evening has been played, and a game
+master cannot rate themselves. Thirteen cases in `test/rules.mjs` are that
+paragraph, one clause at a time.
+
+Individual ratings are not public and are not the game master's to read. A list
+of who said what is a list of who said what. Four players can still infer a
+good deal from a tally that moves, which is the honest limit of this and the
+other reason the floor of three exists.
+
 ## Copy style
 
 Beyond rule 15: no exclamation marks, no "revolutionary" or "seamless", no

@@ -31,6 +31,7 @@ import type { PlaySession, SessionNote } from "@/lib/notebook";
 import Tracker from "../Tracker";
 import Notebook, { type Draft } from "../notebook/Notebook";
 import ReportDialog from "./ReportDialog";
+import RateGameMaster from "./RateGameMaster";
 import Roster from "./Roster";
 import SessionZeroCard from "./SessionZeroCard";
 import styles from "./Campaign.module.css";
@@ -411,6 +412,10 @@ export default function Campaign({ partyId }: { partyId: string }) {
           />
         )}
       </section>
+
+      {role === "player" && profile && party.gmId && party.status === "playing" ? (
+        <RateGameMaster partyId={partyId} gmId={party.gmId} uid={profile.uid} />
+      ) : null}
 
       {reporting && profile ? (
         <ReportDialog

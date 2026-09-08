@@ -1,0 +1,59 @@
+/*
+  The game master's standing, on a public page.
+
+  Understated on purpose. It is context on a table, not a badge, and it should
+  not be the loudest thing a player sees when deciding whether to ask for a
+  seat at a table they cannot choose the game master of anyway.
+*/
+
+.card {
+  display: grid;
+  gap: 12px;
+  padding: 20px 22px 22px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 1.08rem;
+  color: var(--ink);
+}
+
+.lines {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.line {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: baseline;
+}
+
+/* Tabular so the column of counts lines up rather than wobbling. */
+.number {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+  min-width: 44px;
+}
+
+.says {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+
+.fine {
+  font-size: 12.5px;
+  line-height: 1.65;
+  color: var(--ink-3);
+  max-width: 68ch;
+}
