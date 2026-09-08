@@ -159,3 +159,103 @@ export type PartyChat = { invite: string | null; updatedAt: number };
 
 /** Whether a pasted string is plausibly a WhatsApp group invite. */
 export const invitePattern = /^https:\/\/chat\.whatsapp\.com\/[A-Za-z0-9]{6,}$/;
+
+/* ==========================================================================
+   Session Zero
+
+   The conversation every table is told to have and most skip, written down so
+   it survives the evening it happened on.
+
+   The prompts are data, so the checklist is a content change rather than a
+   component change, and every answer is the table's own words rather than a
+   dropdown. A tick box would collect nothing worth reading back in month four.
+   ========================================================================== */
+
+export type Prompt = {
+  key: string;
+  title: string;
+  /** The question, asked plainly enough to answer out loud. */
+  ask: string;
+  /** Why it is worth agreeing now rather than discovering later. */
+  hint: string;
+};
+
+export const SESSION_ZERO: Prompt[] = [
+  {
+    key: "tone",
+    title: "Tone",
+    ask: "What kind of evening is this?",
+    hint:
+      "Grim, funny, heroic, frightening. Everybody turns up assuming their own "
+      + "answer, and nobody finds out they disagreed until somebody cracks a "
+      + "joke in the wrong scene.",
+  },
+  {
+    key: "expectations",
+    title: "What everybody came for",
+    ask: "How much fighting, how much talking, how much working it out?",
+    hint:
+      "Two people wanting different games is the most common reason a table "
+      + "quietly stops meeting. It is also the easiest to say out loud.",
+  },
+  {
+    key: "limits",
+    title: "Hard limits",
+    ask: "What does not happen at this table?",
+    hint:
+      "Your own lines and veils are already on your account and stay private. "
+      + "This is the table's version, agreed together and in its own words.",
+  },
+  {
+    key: "houseRules",
+    title: "House rules",
+    ask: "What are you doing differently from the book?",
+    hint:
+      "Critical hits, death saves, how long a rest takes. Write down the ones "
+      + "you argued about, because you will argue about them again.",
+  },
+  {
+    key: "absence",
+    title: "When somebody cannot make it",
+    ask: "Do you play on without them, or move the night?",
+    hint:
+      "Agree this now, while nobody has cancelled and nobody is annoyed. It is "
+      + "the single rule that decides whether a campaign reaches session ten.",
+  },
+];
+
+export type SessionZero = {
+  /** Prompt key to what the table agreed. */
+  answers: Record<string, string>;
+  /** Uid to when that person last said this is what we agreed. */
+  signed: Record<string, number>;
+  /** When an answer last changed. Signatures older than this are stale. */
+  changedAt: number;
+  updatedAt: number;
+};
+
+export const EMPTY_SESSION_ZERO: SessionZero = {
+  answers: {},
+  signed: {},
+  changedAt: 0,
+  updatedAt: 0,
+};
+
+/**
+ * Whether somebody has agreed to what the document currently says.
+ *
+ * Signing is dated rather than a boolean on purpose. Six people agree, one of
+ * them edits the limits a fortnight later, and a boolean would leave five
+ * signatures standing under a sentence nobody else has read. Comparing against
+ * `changedAt` makes that visible instead of quietly wrong.
+ */
+export const hasAgreed = (zero: SessionZero, uid: string): boolean =>
+  zero.changedAt > 0 && (zero.signed[uid] ?? 0) >= zero.changedAt;
+
+/** How many of the table have agreed to what it says now. */
+export const agreedCount = (zero: SessionZero, playerIds: string[]): number =>
+  playerIds.filter((uid) => hasAgreed(zero, uid)).length;
+
+/** Nothing filled in at all, which is the state worth prompting about. */
+export const sessionZeroEmpty = (zero: SessionZero): boolean =>
+  SESSION_ZERO.every((prompt) => !(zero.answers[prompt.key] ?? "").trim());

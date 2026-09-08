@@ -1027,9 +1027,37 @@ against Firestore until the day the keys land**, and expect the first hour after
 that to be about rules and indexes rather than about features.
 
 **What is genuinely not built**: `/parties/new` for a group of friends who want
-to skip the matching, and the safety machinery. `/safety` describes reporting,
-blocking and removal, and none of the three exists. That is the largest gap in
-the product and it is a promise-shaped one. See `Scope v1.md`.
+to skip the matching, blocking, and attendance. `/safety` makes four promises
+and three are now kept: reporting, removal, and Session Zero are built, and
+**blocking is not**. That is the remaining promise-shaped gap. See
+`Scope v1.md`.
+
+Two of those landed together and are worth reading as a pair, because they are
+the same argument pointed in opposite directions.
+
+**Removal** is the game master's, and it is theirs alone. `/safety` says it
+happens immediately and without them explaining themselves first, so it cannot
+be a request to an admin who might be asleep. `firestore.rules` lets the game
+master of a party take exactly one player out of it: the affected keys are a
+whitelist, the list has to shrink by one, and every remaining id has to have
+been there already, so the write cannot rename the party, move it, hand it to
+somebody else, or swap the table for five accounts of the game master's own.
+The four writes it makes are ordered so that the one ending access goes first
+and everything after it is tidying, because a removal that stops halfway should
+leave the person out rather than in.
+
+That change also corrected rule 7. Four is the floor for **assigning** a game
+master, not for keeping one. Reading it as both meant a game master could not
+remove a fourth player, which is exactly the person most worth removing.
+
+**Session Zero** is the players', and the game master is deliberately locked
+out of writing it. That is rule 9 applied to an agreement rather than to a
+record, and the reasoning survives the move: a game master who can edit what
+the table agreed can widen it afterwards, and this document is the only thing a
+player can point at when they say that is not what we said. Signatures are
+dated rather than ticked, and `changedAt` moves whenever an answer does, so a
+signature older than the last edit shows as stale instead of standing under
+wording nobody else has read.
 
 Blocked on Mark: **deploy the rules** (`firebase login` then `firebase deploy
 --only firestore:rules,firestore:indexes`, or paste `firestore.rules.min` into

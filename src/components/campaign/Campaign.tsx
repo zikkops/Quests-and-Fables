@@ -31,6 +31,8 @@ import type { PlaySession, SessionNote } from "@/lib/notebook";
 import Tracker from "../Tracker";
 import Notebook, { type Draft } from "../notebook/Notebook";
 import ReportDialog from "./ReportDialog";
+import Roster from "./Roster";
+import SessionZeroCard from "./SessionZeroCard";
 import styles from "./Campaign.module.css";
 
 /**
@@ -301,6 +303,37 @@ export default function Campaign({ partyId }: { partyId: string }) {
       </div>
 
       {error ? <p className={styles.error}>{error}</p> : null}
+
+      {profile ? (
+        <SessionZeroCard
+          partyId={partyId}
+          uid={profile.uid}
+          playerIds={party.playerIds}
+          role={role}
+        />
+      ) : null}
+
+      {role === "gm" && profile ? (
+        <Roster
+          partyId={partyId}
+          gmId={profile.uid}
+          playerIds={party.playerIds}
+          sheets={sheets}
+          notes={notes}
+          onChange={(remaining) => {
+            /*
+              The party document has already been written. Reflecting it here
+              rather than re-reading keeps the page honest in the one second
+              that matters, and the next load reads the real thing anyway.
+            */
+            setParty((now) =>
+              now && now !== "missing" ? { ...now, playerIds: remaining } : now,
+            );
+            setSheets((now) => now.filter((sheet) => party.playerIds.includes(sheet.ownerId)
+                                                     && remaining.includes(sheet.ownerId)));
+          }}
+        />
+      ) : null}
 
       <section className={styles.block}>
         <div className={styles.blockHead}>

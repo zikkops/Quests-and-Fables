@@ -16,7 +16,14 @@ import {
 import { db, unavailable } from "./client";
 import { withTimeout } from "./reach";
 import { PATHS, type Profile } from "./schema";
-import { PARTY_MAX, type Party, type PartyChat, type PartyStatus, type Slot } from "@/lib/party";
+import {
+  PARTY_MAX,
+  PARTY_MIN,
+  type Party,
+  type PartyChat,
+  type PartyStatus,
+  type Slot,
+} from "@/lib/party";
 import { aggregate, type PartyProfile } from "@/lib/match";
 
 /**
@@ -279,3 +286,80 @@ export const bringSheet = (partyId: string, uid: string, character: unknown) =>
 
 export const takeSheetBack = (partyId: string, uid: string) =>
   deleteDoc(doc(database(), PARTY_PATH, partyId, "sheets", uid));
+
+/* ==========================================================================
+   Removal
+
+   A game master taking somebody out of their own party. `/safety` promises
+   this happens immediately and without them explaining themselves first, so it
+   is a thing they do rather than a request to whoever runs the service.
+   ========================================================================== */
+
+/**
+ * Take a player out of a party.
+ *
+ * **The order is the safety property, and it is deliberate.** These are four
+ * separate writes rather than one transaction, because a transaction that
+ * fails leaves the person at the table while everybody waits, and the whole
+ * promise is that it happens now. So the write that actually ends their access
+ * goes first and every later step is tidying:
+ *
+ * 1. `members/{uid}` is deleted. That document is what `memberRole()` reads,
+ *    so from here they cannot open the notebook, the sheets or the group chat
+ *    link, whatever happens next.
+ * 2. Their sheet leaves with them, so a character they never agreed to share
+ *    any longer is not left sitting on five other screens.
+ * 3. The removal is recorded. It is the only trace, since the membership that
+ *    proved they were ever here has just gone.
+ * 4. The party document catches up.
+ *
+ * If it stops halfway the person is out, which is the failure worth having. A
+ * stale `playerIds` is a cosmetic wrong number on a page; a member document
+ * left behind would be somebody reading a notebook they were removed from.
+ *
+ * The aggregate is deliberately not recomputed. It is derived from the members'
+ * profiles and a game master cannot read those, by design. Leaving it alone is
+ * safe in the direction that matters: it is an intersection of everybody's
+ * hours and the strictest limit anybody drew, so a party that has lost somebody
+ * can only really be freer than its aggregate claims. It says less than the
+ * truth rather than more, until an admin next touches the party.
+ */
+export async function removePlayer(input: {
+  partyId: string;
+  /** The player leaving. */
+  uid: string;
+  /** The game master doing it, for the record. */
+  by: string;
+  /** Everybody currently on the party document. */
+  playerIds: string[];
+}): Promise<string[]> {
+  const remaining = input.playerIds.filter((id) => id !== input.uid);
+  if (remaining.length === input.playerIds.length) {
+    throw new Error("That player is not at this table.");
+  }
+
+  const instance = database();
+
+  /* 1. Access, first and on its own. */
+  await withTimeout(deleteDoc(doc(instance, PARTY_PATH, input.partyId, "members", input.uid)));
+
+  /* 2. Their character. Absent is fine: not everybody brings one. */
+  await deleteDoc(doc(instance, PARTY_PATH, input.partyId, "sheets", input.uid)).catch(() => {});
+
+  /* 3. The record. Written once and never editable, see firestore.rules. */
+  await setDoc(doc(instance, PARTY_PATH, input.partyId, "removals", input.uid), {
+    by: input.by,
+    at: Date.now(),
+  }).catch(() => {});
+
+  /* 4. The public document. A table that drops below four is forming again and
+        says so, which is what puts it back in front of players looking for a
+        seat. It keeps its game master: rule 7's floor is for assigning one. */
+  await withTimeout(updateDoc(doc(instance, PARTY_PATH, input.partyId), {
+    playerIds: remaining,
+    status: (remaining.length < PARTY_MIN ? "forming" : "assigned") satisfies PartyStatus,
+    updatedAt: Date.now(),
+  }));
+
+  return remaining;
+}

@@ -36,7 +36,7 @@ rules_version = '2';
      without the first the counter never rises, without the second it can be
      wound back to zero for free and the limit means nothing.
 
-  **Every rule in this file is tested.** `npm run test:rules` runs 55 cases
+  **Every rule in this file is tested.** `npm run test:rules` runs 73 cases
   against the emulator. Each one is what somebody with the SDK and a text
   editor can do, rather than what the app happens to do, because the app being
   well behaved is not evidence. Run it before deploying: a rules mistake does
@@ -333,12 +333,45 @@ service cloud.firestore {
                     && request.resource.data.area is string
                     && request.resource.data.status in ['forming', 'assigned', 'playing', 'closed'];
 
-      allow update: if isAdmin()
+      /*
+        A game master removing one player from their own party, and nothing
+        else. `/safety` promises they can do it immediately and without
+        explaining themselves first, so it cannot be a request to an admin who
+        might be asleep.
+
+        Every clause here is load bearing. The affected keys are a whitelist, so
+        this cannot rename the party, move it, or hand it to somebody else. The
+        list must shrink by exactly one and every remaining id must have been
+        there already, so it removes rather than replaces: without `hasOnly`
+        a game master could swap the table for five accounts of their own.
+        `gmId` is not in the whitelist, so it cannot change under this clause
+        at all, which is what stops a game master promoting themselves out of a
+        party they were removed from.
+      */
+      function gmRemovingOnePlayer() {
+        return signedIn()
+               && memberRole() == 'gm'
+               && resource.data.gmId == request.auth.uid
+               && request.resource.data.diff(resource.data).affectedKeys()
+                    .hasOnly(['playerIds', 'status', 'profile', 'updatedAt'])
+               && request.resource.data.playerIds.size() == resource.data.playerIds.size() - 1
+               && request.resource.data.playerIds.hasOnly(resource.data.playerIds);
+      }
+
+      allow update: if (isAdmin() || gmRemovingOnePlayer())
                     && request.resource.data.playerIds is list
                     && request.resource.data.playerIds.size() <= 6
-                    // A game master may only be attached to a party that is
-                    // actually a party. Four is the floor and it is a rule.
+                    // A game master may only be *attached* to a party that is
+                    // actually a party. Four is the floor for assigning one.
+                    //
+                    // It is not a floor for keeping one. A table that loses its
+                    // fourth player, because somebody left or was removed, is a
+                    // table of three that still has a game master and still has
+                    // a campaign. Reading it the other way would have meant a
+                    // game master could not remove the fourth person, which is
+                    // exactly the person most worth removing.
                     && (request.resource.data.gmId == null
+                        || request.resource.data.gmId == resource.data.gmId
                         || request.resource.data.playerIds.size() >= 4)
                     // The game master is never one of the players.
                     && !(request.resource.data.gmId in request.resource.data.playerIds);
@@ -348,6 +381,18 @@ service cloud.firestore {
       match /members/{uid} {
         allow read: if memberRole() in ['player', 'gm'] || isAdmin();
         allow write: if isAdmin();
+
+        /*
+          This document is what `memberRole()` reads, so deleting it is what
+          actually ends somebody's access to the table: the notebook, the
+          sheets, the group chat link, all of it. It is the first write the
+          removal makes for that reason.
+
+          Only over a player, and only by the game master of this same party,
+          because `memberRole()` is scoped to it. A game master cannot remove
+          another game master, and nobody can remove themselves this way.
+        */
+        allow delete: if memberRole() == 'gm' && resource.data.role == 'player';
       }
 
       /* ---- sheets brought to the table ------------------------------------
@@ -366,6 +411,16 @@ service cloud.firestore {
                      && memberRole() in ['player', 'gm']
                      && (request.method == 'delete'
                          || request.resource.data.ownerId == uid);
+
+        /*
+          And the game master may delete one, which is only ever used to take a
+          removed player's character off the table with them. Deletion cannot
+          leak anything: a game master can already read every sheet here. The
+          alternative is worse, because the owner stops being a member the
+          moment they are removed and can then no longer take their own sheet
+          back.
+        */
+        allow delete: if memberRole() == 'gm';
       }
 
       /* ---- the group chat, and anything else that is a key ---------------
@@ -375,6 +430,65 @@ service cloud.firestore {
       match /secrets/{document} {
         allow read: if memberRole() in ['player', 'gm'] || isAdmin();
         allow write: if isAdmin();
+      }
+
+      /* ---- what the table agreed before it played -------------------------
+         Session Zero. The tone, what everybody expects, the hard limits, the
+         house rules, and what happens when one of six cannot make a Tuesday.
+
+         **Written by players and never by the game master**, which is rule 9
+         applied to an agreement rather than to a record. The reasoning is the
+         same and it is not weaker here: a game master who can edit what the
+         table agreed can quietly widen it, and this document is the only thing
+         a player can point at afterwards. They read it, they are at the
+         conversation that fills it in, and they do not hold the pen.
+
+         Signatures are a map of uid to when that person last agreed, and
+         `changedAt` moves whenever an answer does, so a signature older than
+         the last edit is visibly stale rather than silently wrong. Nobody can
+         sign for anybody else.
+         -------------------------------------------------------------------- */
+      match /sessionZero/{document} {
+        allow read: if memberRole() in ['player', 'gm'];
+
+        allow create, update: if memberRole() == 'player'
+                              && inGoodStanding(request.auth.uid)
+                              && request.resource.data.keys()
+                                   .hasOnly(['answers', 'signed', 'changedAt', 'updatedAt'])
+                              && request.resource.data.answers is map
+                              && request.resource.data.signed is map
+                              && request.resource.data.changedAt is int
+                              && request.resource.data.updatedAt is int
+                              // Sign for yourself. Whatever else this write
+                              // does, it may not add or move anybody else's
+                              // signature.
+                              && request.resource.data.signed.diff(
+                                   resource == null ? {} : resource.data.signed
+                                 ).affectedKeys().hasOnly([request.auth.uid]);
+
+        /* The agreement is not something one of six can throw away. */
+        allow delete: if false;
+      }
+
+      /* ---- who was removed, and by whom -----------------------------------
+         "Without explaining themselves first" is not the same as never. A
+         removal leaves nothing behind otherwise, because the membership it
+         ended is deleted, so this is the only trace that it happened.
+
+         Not readable by the rest of the table. It names one person and says
+         they were thrown out, which is exactly the sort of thing rule 8 keeps
+         off a document five other people can read.
+         -------------------------------------------------------------------- */
+      match /removals/{uid} {
+        allow read: if memberRole() == 'gm' || isAdmin();
+
+        allow create: if memberRole() == 'gm'
+                      && request.resource.data.by == request.auth.uid
+                      && request.resource.data.at is int
+                      && request.resource.data.keys().hasOnly(['by', 'at']);
+
+        /* Written once. A record somebody can edit afterwards is not a record. */
+        allow update, delete: if false;
       }
 
       // Note there is no admin clause from here down. Rule 9 has no exception:

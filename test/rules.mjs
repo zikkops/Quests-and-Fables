@@ -289,6 +289,11 @@ async function seedParty() {
       await setDoc(doc(database, "parties/p1/members", uid), { role: "player" });
     }
     await setDoc(doc(database, "parties/p1/members", "gm1"), { role: "gm" });
+    /* Short, and nobody running it: the shape that may not be given one. */
+    await setDoc(doc(database, "parties", "p3"), {
+      name: "Two of us", area: "achrafieh", status: "forming",
+      playerIds: ["bob", "carol"], gmId: null,
+    });
     await setDoc(doc(database, "parties/p1/secrets", "chat"), { url: "https://chat.example/x" });
     await setDoc(doc(database, "parties/p1/sessions", "s1"), { number: 1, title: "One", open: true });
     await setDoc(doc(database, "parties/p1/sessions/s1/notes", "n-party"), {
@@ -313,8 +318,27 @@ await check("a player cannot create or edit a party", async () => {
 });
 
 await check("a party cannot be given a game master until it has four players", async () => {
-  await assertFails(updateDoc(doc(admin("root"), "parties", "p1"), {
-    playerIds: ["bob", "carol"], gmId: "gm1",
+  /* p3 has two players and nobody running it. Assigning one is the thing rule
+     7 refuses, and it is refused however the write is dressed up. */
+  await assertFails(updateDoc(doc(admin("root"), "parties", "p3"), { gmId: "gm1" }));
+  await assertFails(updateDoc(doc(admin("root"), "parties", "p3"), {
+    playerIds: ["bob", "carol", "dan"], gmId: "gm1",
+  }));
+});
+
+await check("a party that loses players keeps the game master it already has", async () => {
+  /*
+    The other half of rule 7, and the half that was wrong until removal was
+    built. Four is the floor for *assigning* a game master, not for keeping
+    one. Reading it as both meant a game master could not remove a fourth
+    player, which is exactly the person most worth removing, and it meant a
+    table that lost somebody quietly became invalid.
+  */
+  await assertSucceeds(updateDoc(doc(admin("root"), "parties", "p1"), {
+    playerIds: ["bob", "carol", "dan"],
+  }));
+  await assertSucceeds(updateDoc(doc(admin("root"), "parties", "p1"), {
+    playerIds: ["bob", "carol", "dan", "erin"],
   }));
 });
 
@@ -448,6 +472,160 @@ await check("nobody edits or deletes a report, including whoever filed it", asyn
   await assertFails(updateDoc(doc(player("bob"), "reports", "rep1"), { detail: "Actually never mind." }));
   await assertFails(deleteDoc(doc(player("bob"), "reports", "rep1")));
   await assertFails(deleteDoc(doc(admin("root"), "reports", "rep1")));
+});
+
+/* ========================================================================
+   Session Zero: what the table agreed
+   ======================================================================== */
+console.log("");
+console.log("Session Zero");
+
+await check("a player writes what the table agreed, and signs for themselves", async () => {
+  await assertSucceeds(setDoc(doc(player("bob"), "parties/p1/sessionZero", "agreement"), {
+    answers: { tone: "Grim, but funny about it." },
+    signed: { bob: Date.now() },
+    changedAt: Date.now(),
+    updatedAt: Date.now(),
+  }));
+});
+
+await check("the game master reads the agreement and cannot touch it", async () => {
+  await assertSucceeds(getDoc(doc(player("gm1"), "parties/p1/sessionZero", "agreement")));
+  await assertFails(updateDoc(doc(player("gm1"), "parties/p1/sessionZero", "agreement"), {
+    answers: { tone: "Whatever I feel like." },
+    signed: { bob: Date.now() },
+    changedAt: Date.now(),
+    updatedAt: Date.now(),
+  }));
+});
+
+await check("nobody signs the agreement for anybody else", async () => {
+  await assertFails(updateDoc(doc(player("bob"), "parties/p1/sessionZero", "agreement"), {
+    answers: { tone: "Grim, but funny about it." },
+    signed: { bob: Date.now(), carol: Date.now() },
+    changedAt: Date.now(),
+    updatedAt: Date.now(),
+  }));
+});
+
+await check("an outsider cannot read what a table agreed", async () => {
+  await assertFails(getDoc(doc(player("nobody"), "parties/p1/sessionZero", "agreement")));
+  await assertFails(getDoc(doc(stranger(), "parties/p1/sessionZero", "agreement")));
+});
+
+await check("one of six cannot throw the agreement away", async () => {
+  await assertFails(deleteDoc(doc(player("bob"), "parties/p1/sessionZero", "agreement")));
+  await assertFails(deleteDoc(doc(admin("root"), "parties/p1/sessionZero", "agreement")));
+});
+
+/* ========================================================================
+   Removal: a game master taking somebody out of their party
+   ======================================================================== */
+console.log("");
+console.log("Removal");
+
+async function seedSecondParty() {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    const database = ctx.firestore();
+    await setDoc(doc(database, "parties", "p2"), {
+      name: "Sunday afternoons", area: "achrafieh", status: "assigned",
+      playerIds: ["bob", "carol", "dan", "erin"], gmId: "gm2",
+    });
+    for (const uid of ["bob", "carol", "dan", "erin"]) {
+      await setDoc(doc(database, "parties/p2/members", uid), { role: "player" });
+    }
+    await setDoc(doc(database, "parties/p2/members", "gm2"), { role: "gm" });
+    await setDoc(doc(database, "parties/p2/sheets", "carol"), { ownerId: "carol", character: {} });
+  });
+}
+await seedSecondParty();
+
+await check("a player cannot remove anybody, including themselves", async () => {
+  await assertFails(deleteDoc(doc(player("bob"), "parties/p2/members", "carol")));
+  await assertFails(deleteDoc(doc(player("carol"), "parties/p2/members", "carol")));
+});
+
+await check("a game master of another table cannot reach into this one", async () => {
+  await assertFails(deleteDoc(doc(player("gm1"), "parties/p2/members", "carol")));
+  await assertFails(updateDoc(doc(player("gm1"), "parties", "p2"), {
+    playerIds: ["bob", "dan", "erin"], updatedAt: Date.now(),
+  }));
+});
+
+await check("a game master cannot remove another game master", async () => {
+  await assertFails(deleteDoc(doc(player("gm2"), "parties/p2/members", "gm2")));
+});
+
+await check("a removal cannot rename the party or move it", async () => {
+  await assertFails(updateDoc(doc(player("gm2"), "parties", "p2"), {
+    playerIds: ["bob", "dan", "erin"], name: "Mine now", updatedAt: Date.now(),
+  }));
+  await assertFails(updateDoc(doc(player("gm2"), "parties", "p2"), {
+    playerIds: ["bob", "dan", "erin"], area: "jbeil", updatedAt: Date.now(),
+  }));
+});
+
+await check("a removal removes rather than replaces", async () => {
+  /* Same size, different people: the table swapped for the game master's own
+     accounts. hasOnly is what refuses this. */
+  await assertFails(updateDoc(doc(player("gm2"), "parties", "p2"), {
+    playerIds: ["mine1", "mine2", "mine3"], updatedAt: Date.now(),
+  }));
+  /* And it cannot add a seat either. */
+  await assertFails(updateDoc(doc(player("gm2"), "parties", "p2"), {
+    playerIds: ["bob", "carol", "dan", "erin", "frank"], updatedAt: Date.now(),
+  }));
+  /* Nor take two at once. */
+  await assertFails(updateDoc(doc(player("gm2"), "parties", "p2"), {
+    playerIds: ["bob", "dan"], updatedAt: Date.now(),
+  }));
+});
+
+await check("a game master cannot hand the party to somebody else while removing", async () => {
+  await assertFails(updateDoc(doc(player("gm2"), "parties", "p2"), {
+    playerIds: ["bob", "dan", "erin"], gmId: "gm1", updatedAt: Date.now(),
+  }));
+});
+
+await check("the game master removes a player, and their sheet goes with them", async () => {
+  /* Membership first: it is what ends access to the notebook and the chat. */
+  await assertSucceeds(deleteDoc(doc(player("gm2"), "parties/p2/members", "carol")));
+  await assertSucceeds(deleteDoc(doc(player("gm2"), "parties/p2/sheets", "carol")));
+  await assertSucceeds(setDoc(doc(player("gm2"), "parties/p2/removals", "carol"), {
+    by: "gm2", at: Date.now(),
+  }));
+  await assertSucceeds(updateDoc(doc(player("gm2"), "parties", "p2"), {
+    playerIds: ["bob", "dan", "erin"], status: "forming", updatedAt: Date.now(),
+  }));
+});
+
+await check("a table of three keeps its game master, and cannot be given a new one", async () => {
+  /* The party is three now. The game master stays, because losing a fourth
+     player is not the same as being assigned one while short. */
+  await assertFails(updateDoc(doc(admin("root"), "parties", "p2"), {
+    playerIds: ["bob", "dan", "erin"], gmId: "gm3",
+  }));
+});
+
+await check("a removed player is out of the notebook immediately", async () => {
+  await assertFails(getDoc(doc(player("carol"), "parties/p2/members", "bob")));
+});
+
+await check("the rest of the table cannot read who was removed", async () => {
+  await assertFails(getDoc(doc(player("bob"), "parties/p2/removals", "carol")));
+  await assertSucceeds(getDoc(doc(player("gm2"), "parties/p2/removals", "carol")));
+});
+
+await check("a removal record cannot be edited or taken back", async () => {
+  await assertFails(updateDoc(doc(player("gm2"), "parties/p2/removals", "carol"), { by: "somebody" }));
+  await assertFails(deleteDoc(doc(player("gm2"), "parties/p2/removals", "carol")));
+  await assertFails(deleteDoc(doc(admin("root"), "parties/p2/removals", "carol")));
+});
+
+await check("a game master cannot forge a removal in somebody else's name", async () => {
+  await assertFails(setDoc(doc(player("gm2"), "parties/p2/removals", "dan"), {
+    by: "gm1", at: Date.now(),
+  }));
 });
 
 await check("the final deny still denies", async () => {
