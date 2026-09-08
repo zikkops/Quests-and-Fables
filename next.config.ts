@@ -12,7 +12,22 @@ import type { NextConfig } from "next";
  * It also keeps the two sets of compiled output apart, so switching between
  * them is not a rebuild every time.
  */
-const onEmulator = process.env.NEXT_PUBLIC_FIREBASE_EMULATOR === "1";
+/*
+  ⚠️ Development only, and the second half of that condition matters.
+
+  `distDir` decides where the compiled config itself is written, so a config
+  whose output location depends on an environment variable is a config that can
+  be looked for in the wrong place. A deploy that happened to carry
+  NEXT_PUBLIC_FIREBASE_EMULATOR, from a copied env file or a dashboard entry,
+  would build into `.next-emulator` while the platform looked in `.next`.
+
+  A production build now always writes to `.next`, whatever the environment
+  says. There is no reason for a deploy to want the emulator's directory, and
+  every reason for the answer not to depend on a stray variable.
+*/
+const onEmulator =
+  process.env.NEXT_PUBLIC_FIREBASE_EMULATOR === "1"
+  && process.env.NODE_ENV !== "production";
 
 const nextConfig: NextConfig = {
   ...(onEmulator ? { distDir: ".next-emulator" } : {}),
