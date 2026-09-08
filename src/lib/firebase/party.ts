@@ -363,3 +363,22 @@ export async function removePlayer(input: {
 
   return remaining;
 }
+
+/**
+ * Say that this table has played.
+ *
+ * Called when a game master opens the first night. `status` is the field that
+ * distinguishes a party that has met from one that has merely been assembled,
+ * and until the rules allowed this the only person who could set it was the one
+ * person who was not in the room. So it read "assigned" for ever, and
+ * everything waiting on "playing" waited for ever with it.
+ *
+ * Safe to call when it is already playing: the rules refuse that write, and a
+ * refusal here is not worth interrupting somebody's evening over, so the caller
+ * is expected to check the status first and this simply does the write.
+ */
+export const markPlaying = (partyId: string) =>
+  updateDoc(doc(database(), PARTY_PATH, partyId), {
+    status: "playing" satisfies PartyStatus,
+    updatedAt: Date.now(),
+  });

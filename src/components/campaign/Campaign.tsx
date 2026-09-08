@@ -6,12 +6,15 @@ import {
   bringSheet,
   listParties,
   listSheets,
+  markPlaying,
   takeSheetBack,
   type TableSheet,
 } from "@/lib/firebase/party";
 import {
   addNote,
+  closeNight,
   listSessions,
+  openNight,
   removeNote,
   syncNotes,
   watchSession,
@@ -282,6 +285,37 @@ export default function Campaign({ partyId }: { partyId: string }) {
     }
   };
 
+  /*
+    Start tonight, and say so on the party if this is the first one.
+
+    The two are one action to a game master: they are sitting down to play. The
+    order matters only in that the night is the thing they asked for, so a
+    refused status write must not lose it.
+  */
+  const startNight = async () => {
+    setError(null);
+
+    try {
+      await openNight(partyId, "");
+      /* Already narrowed to a real party by the guards above. */
+      if (party.status === "assigned") await markPlaying(partyId);
+      reload();
+    } catch (problem) {
+      setError((problem as Error).message);
+    }
+  };
+
+  const endNight = async (sessionId: string) => {
+    setError(null);
+
+    try {
+      await closeNight(partyId, sessionId);
+      reload();
+    } catch (problem) {
+      setError((problem as Error).message);
+    }
+  };
+
   const erase = async (noteId: string) => {
     const note = [...notes, ...gmNotes].find((entry) => entry.id === noteId);
     if (!note) return;
@@ -393,6 +427,48 @@ export default function Campaign({ partyId }: { partyId: string }) {
           </div>
         ) : null}
       </section>
+
+      {role === "gm" ? (
+        <section className={styles.block}>
+          <div className={styles.blockHead}>
+            <h3 className={styles.blockTitle}>Tonight</h3>
+            <span className={styles.quiet}>
+              {openSession
+                ? `Session ${openSession.number} is open`
+                : sessions.length === 0
+                  ? "No sessions yet"
+                  : "Nothing open"}
+            </span>
+          </div>
+
+          {openSession ? (
+            <>
+              <p className={styles.quiet}>
+                The table is writing into <strong>session {openSession.number}</strong>.
+                Close it when you finish and the next one starts fresh.
+              </p>
+              <button
+                type="button"
+                className={styles.secondary}
+                onClick={() => endNight(openSession.id)}
+              >
+                Close session {openSession.number}
+              </button>
+            </>
+          ) : (
+            <>
+              <p className={styles.quiet}>
+                {sessions.length === 0
+                  ? "Open the first night and the notebook starts. It is also what marks this table as one that has played."
+                  : "Open the next night when you sit down. The last one stays exactly as it was written."}
+              </p>
+              <button type="button" className={styles.primary} onClick={startNight}>
+                {sessions.length === 0 ? "Start the first night" : "Start the next night"}
+              </button>
+            </>
+          )}
+        </section>
+      ) : null}
 
       <section className={styles.block}>
         <h3 className={styles.blockTitle}>The notebook</h3>

@@ -308,3 +308,50 @@ export async function removeNote(
 ): Promise<void> {
   await deleteDoc(doc(database(), NOTEBOOK_PATHS.notes(partyId, sessionId), noteId));
 }
+
+/* ==========================================================================
+   Nights
+
+   Opening and closing a session. Until this existed nothing in the product
+   could create one, so the notebook's own empty state ("it fills in from the
+   first night you play") described something no code path could reach, and
+   every party stayed on `assigned` for ever.
+   ========================================================================== */
+
+/**
+ * Start tonight.
+ *
+ * Numbered rather than dated, because that is how a table refers to its own
+ * history: session seven, not the fourteenth of March. The number is taken from
+ * what is already there rather than stored as a counter, so a session deleted
+ * by hand does not leave a gap that a counter would keep insisting on.
+ *
+ * One night is open at a time. Opening a new one closes the last, which is what
+ * a game master means by starting the next session, and it saves them a second
+ * button they would forget.
+ */
+export async function openNight(partyId: string, title: string): Promise<PlaySession> {
+  const existing = await listSessions(partyId);
+  const last = existing.find((night) => night.open);
+
+  if (last) await closeNight(partyId, last.id);
+
+  const number = existing.reduce((highest, night) => Math.max(highest, night.number), 0) + 1;
+  const night = {
+    campaignId: partyId,
+    number,
+    title: title.trim().slice(0, 80) || `Session ${number}`,
+    playedOn: Date.now(),
+    open: true,
+  };
+
+  const entry = await withTimeout(
+    addDoc(collection(database(), NOTEBOOK_PATHS.sessions(partyId)), night),
+  );
+
+  return { id: entry.id, ...night };
+}
+
+/** Close it. The notes stay; the book simply stops taking new ones tonight. */
+export const closeNight = (partyId: string, sessionId: string) =>
+  updateDoc(doc(database(), NOTEBOOK_PATHS.sessions(partyId), sessionId), { open: false });

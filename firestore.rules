@@ -36,7 +36,7 @@ rules_version = '2';
      without the first the counter never rises, without the second it can be
      wound back to zero for free and the limit means nothing.
 
-  **Every rule in this file is tested.** `npm run test:rules` runs 86 cases
+  **Every rule in this file is tested.** `npm run test:rules` runs 92 cases
   against the emulator. Each one is what somebody with the SDK and a text
   editor can do, rather than what the app happens to do, because the app being
   well behaved is not evidence. Run it before deploying: a rules mistake does
@@ -358,7 +358,31 @@ service cloud.firestore {
                && request.resource.data.playerIds.hasOnly(resource.data.playerIds);
       }
 
-      allow update: if (isAdmin() || gmRemovingOnePlayer())
+      /*
+        A game master starting the first night, and nothing else.
+
+        `status` is the field that says a party has played, and until this
+        existed only an admin could set it. That made the field a lie in
+        practice: a table could run for months and still read as "assigned",
+        because the only person who knew a night had happened was the one person
+        who could not say so. It also silently held back everything that waits
+        on `playing`, the game master's rating among them.
+
+        One transition only, in one direction. A game master cannot close a
+        party, cannot walk it back to forming, and cannot touch anything else in
+        the same write.
+      */
+      function gmStartingPlay() {
+        return signedIn()
+               && memberRole() == 'gm'
+               && resource.data.gmId == request.auth.uid
+               && resource.data.status == 'assigned'
+               && request.resource.data.status == 'playing'
+               && request.resource.data.diff(resource.data).affectedKeys()
+                    .hasOnly(['status', 'updatedAt']);
+      }
+
+      allow update: if (isAdmin() || gmRemovingOnePlayer() || gmStartingPlay())
                     && request.resource.data.playerIds is list
                     && request.resource.data.playerIds.size() <= 6
                     // A game master may only be *attached* to a party that is

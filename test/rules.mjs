@@ -629,6 +629,48 @@ await check("a game master cannot forge a removal in somebody else's name", asyn
 });
 
 /* ========================================================================
+   Starting the first night
+   ======================================================================== */
+console.log("");
+console.log("Nights");
+
+await check("the game master says the table has played, once", async () => {
+  /* p1 is assigned with a game master. Moving it to playing is theirs. */
+  await assertSucceeds(updateDoc(doc(player("gm1"), "parties", "p1"), {
+    status: "playing", updatedAt: Date.now(),
+  }));
+});
+
+await check("and cannot walk it back, or close it, or touch anything else", async () => {
+  await assertFails(updateDoc(doc(player("gm1"), "parties", "p1"), { status: "forming" }));
+  await assertFails(updateDoc(doc(player("gm1"), "parties", "p1"), { status: "closed" }));
+  await assertFails(updateDoc(doc(player("gm1"), "parties", "p1"), {
+    status: "playing", name: "Mine now",
+  }));
+});
+
+await check("a player cannot say the table has played", async () => {
+  await assertFails(updateDoc(doc(player("bob"), "parties", "p3"), { status: "playing" }));
+});
+
+await check("a game master cannot start play at somebody else's table", async () => {
+  await assertFails(updateDoc(doc(player("gm1"), "parties", "p2"), { status: "playing" }));
+});
+
+await check("the game master opens and closes a night", async () => {
+  await assertSucceeds(setDoc(doc(player("gm1"), "parties/p1/sessions", "s2"), {
+    campaignId: "p1", number: 2, title: "The second night", playedOn: Date.now(), open: true,
+  }));
+  await assertSucceeds(updateDoc(doc(player("gm1"), "parties/p1/sessions", "s2"), { open: false }));
+});
+
+await check("a player cannot open a night", async () => {
+  await assertFails(setDoc(doc(player("bob"), "parties/p1/sessions", "s3"), {
+    campaignId: "p1", number: 3, title: "Mine", playedOn: Date.now(), open: true,
+  }));
+});
+
+/* ========================================================================
    What a table says about the game master who ran it
    ======================================================================== */
 console.log("");
