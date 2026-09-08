@@ -1,7 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { recheckVerified, saySorry, sendVerification, useSession } from "@/lib/firebase/session";
+import {
+  letterTrouble,
+  recheckVerified,
+  saySorry,
+  sendVerification,
+  useSession,
+} from "@/lib/firebase/session";
 import { GRACE_DAYS, standing, type Standing } from "@/lib/firebase/schema";
 import styles from "./Account.module.css";
 
@@ -32,6 +38,13 @@ export default function Verify({ where }: { where: Standing }) {
   const [sent, setSent] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  /*
+    Read once, at mount. Registration does not let a failed letter stop it any
+    more, which means this banner is the first place anybody finds out, and it
+    must not open by telling them an email was sent when none was.
+  */
+  const [neverSent] = useState(letterTrouble);
 
   if (where.state === "verified") return null;
 
@@ -86,9 +99,20 @@ export default function Verify({ where }: { where: Standing }) {
           </>
         ) : (
           <>
-            We sent a link to <strong>{user?.email}</strong>. Follow it within{" "}
-            {GRACE_DAYS} days of registering or the account is held until you do.
-            Everything works normally until then.
+            {neverSent && !sent ? (
+              <>
+                We could not send the link to <strong>{user?.email}</strong>.
+                Your account is made and nothing is lost. Send it again below,
+                and if it keeps failing the address may be mistyped. You have{" "}
+                {GRACE_DAYS} days from registering before the account is held.
+              </>
+            ) : (
+              <>
+                We sent a link to <strong>{user?.email}</strong>. Follow it
+                within {GRACE_DAYS} days of registering or the account is held
+                until you do. Everything works normally until then.
+              </>
+            )}
           </>
         )}
       </p>

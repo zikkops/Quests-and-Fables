@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createProfile, usernameTaken } from "@/lib/firebase/account";
 import {
   createAccount,
+  letterTrouble,
   resetPassword,
   saySorry,
   signIn,
@@ -42,7 +43,7 @@ const MIN_PASSWORD = 8;
  * they cannot finish.
  */
 export default function SignIn() {
-  const { user, profile, profileUnread, loading, configured } = useSession();
+  const { user, profile, profileUnread, loading, configured, refresh } = useSession();
   const router = useRouter();
 
   const [mode, setMode] = useState<Mode>("in");
@@ -59,8 +60,29 @@ export default function SignIn() {
   const [sent, setSent] = useState(false);
   const [madeIt, setMadeIt] = useState(false);
 
+  /*
+    True from the moment the account is made until the profile is written.
+
+    A ref rather than state, because the whole point is not to re-render: this
+    guards an effect that would otherwise fire in the gap between those two
+    writes, and re-rendering to raise the flag is the same race one tick later.
+  */
+  const registering = useRef(false);
+
   /* Already in. Somebody half registered goes to finish it. */
   useEffect(() => {
+    /*
+      Registering is not "half registered", even though it looks identical for
+      a moment. `createAccount` makes the auth user, which wakes the session,
+      which reads a profile that `createProfile` has not written yet. This
+      effect then saw a signed-in person with no profile and sent them to
+      /account/setup, mid-registration, and nothing afterwards told the session
+      to look again. They arrived at "Finish setting up" with a finished profile
+      already in the database, and filling it in was refused because they
+      already had one. A completed registration, presented as an unfinished one
+      that could not be finished.
+    */
+    if (registering.current) return;
     if (loading || !user || madeIt) return;
     /* Only "there is no profile" sends somebody to set one up. "We could not
        read it" sends them to their account, which says so and offers a retry:
@@ -112,6 +134,7 @@ export default function SignIn() {
   const register = async () => {
     setError(null);
     setBusy(true);
+    registering.current = true;
 
     try {
       /* Before the account exists, so a taken name never strands anybody. */
@@ -131,10 +154,20 @@ export default function SignIn() {
         dob: dobToMillis(dob),
       });
 
+      /*
+        The session read "no profile" a moment ago because there was none yet.
+        Tell it to look again, so the account screens see the profile that now
+        exists rather than sending this person off to create a second one.
+      */
+      await refresh();
       setMadeIt(true);
     } catch (problem) {
       setError(saySorry(problem));
     } finally {
+      /* Lowered either way. On success `madeIt` holds the screen; on failure
+         the effect should take over, because an account with no profile really
+         is half registered. */
+      registering.current = false;
       setBusy(false);
     }
   };
@@ -171,17 +204,37 @@ export default function SignIn() {
   if (madeIt) {
     return (
       <div className={styles.card}>
-        <h2 className={styles.cardTitle}>You are in. Now prove the address.</h2>
-        <p className={styles.cardBody}>
-          An email is on its way to <strong>{email}</strong> with a link in it.
-          You have <strong>{GRACE_DAYS} days</strong> to follow it. After that
-          the account is held: it keeps everything you have put in it and does
-          nothing else until the address is confirmed.
-        </p>
-        <p className={styles.fine}>
-          Nothing there? Check the spam folder before anything else. You can send
-          it again from your account.
-        </p>
+        <h2 className={styles.cardTitle}>
+          {letterTrouble() ? "You are in. The email did not go out." : "You are in. Now prove the address."}
+        </h2>
+        {letterTrouble() ? (
+          <>
+            <p className={styles.cardBody}>
+              Your account is made and nothing about it is at risk. We could not
+              send the confirmation link to <strong>{email}</strong> just now.
+              You have <strong>{GRACE_DAYS} days</strong> from today before the
+              account is held, and you can send the email again from your
+              account at any point.
+            </p>
+            <p className={styles.fine}>
+              If it keeps failing, the address may be mistyped. Write to us and
+              we will move the account to the right one.
+            </p>
+          </>
+        ) : (
+          <>
+            <p className={styles.cardBody}>
+              An email is on its way to <strong>{email}</strong> with a link in
+              it. You have <strong>{GRACE_DAYS} days</strong> to follow it.
+              After that the account is held: it keeps everything you have put
+              in it and does nothing else until the address is confirmed.
+            </p>
+            <p className={styles.fine}>
+              Nothing there? Check the spam folder before anything else. You can
+              send it again from your account.
+            </p>
+          </>
+        )}
         <Link href="/account" className={styles.primary}>
           Go to my account
         </Link>

@@ -137,12 +137,25 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const refresh = async () => {
-    if (!user) return;
+    /*
+      Whoever is signed in *now*, asked of Firebase rather than of this render.
+
+      Reading the `user` state here meant reading whatever it was when the
+      closure was made, and the one caller that matters most makes its closure
+      before anybody is signed in: the register screen calls this immediately
+      after creating the account, to pick up the profile it has just written.
+      That call captured a null user and returned without doing anything, so
+      the session kept believing the new account had no profile and every
+      account screen sent them off to create a second one.
+    */
+    const person = auth()?.currentUser;
+    if (!person) return;
 
     /* Ask about the address as well as the profile. Somebody who followed the
        link in another tab is verified everywhere except in this one. */
     setVerified(await recheckVerified());
-    setProfile(await getProfile(user.uid));
+    setProfile(await getProfile(person.uid));
+    setProfileUnread(false);
   };
 
   const leave = async () => {
@@ -160,7 +173,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       value={{
         user,
         profile,
-      profileUnread,
+        profileUnread,
         admin,
         verified,
         loading,
@@ -262,7 +275,24 @@ function instance() {
  */
 export async function createAccount(email: string, password: string): Promise<User> {
   const credential = await createUserWithEmailAndPassword(instance(), email, password);
-  await sendVerification();
+
+  /*
+    The letter is the least important part of registering and it used to be able
+    to take the whole thing down with it. `sendEmailVerification` throws for
+    reasons that have nothing to do with this person: a domain missing from
+    Firebase's authorized list, a quota, a network blip. Awaiting it meant the
+    account existed, the password worked, and the caller still saw a failure and
+    wrote no profile.
+
+    So it is recorded rather than raised. Registration finishes, and the verify
+    banner says the email did not go out and offers the resend it already has.
+  */
+  try {
+    await sendVerification();
+  } catch (problem) {
+    letterFailed = saySorry(problem);
+  }
+
   return credential.user;
 }
 
@@ -274,10 +304,24 @@ export async function signIn(email: string, password: string): Promise<User> {
 /** Where the verification link lands them once they follow it. */
 const backTo = () => `${window.location.origin}/account`;
 
+/**
+ * Why the last verification email did not go out, if it did not.
+ *
+ * Module state rather than context, because the only reader is the verify
+ * banner and it renders after a navigation away from the page that registered.
+ * It lives exactly as long as the tab, which is exactly as long as the fact is
+ * worth anything: a reload is a fresh attempt.
+ */
+let letterFailed: string | null = null;
+
+/** Why the last letter failed, or null if it went out. */
+export const letterTrouble = (): string | null => letterFailed;
+
 export async function sendVerification(): Promise<void> {
   const person = instance().currentUser;
   if (!person) throw new Error("Nobody is signed in.");
   await sendEmailVerification(person, { url: backTo() });
+  letterFailed = null;
 }
 
 export const resetPassword = (email: string) =>
