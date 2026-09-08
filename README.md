@@ -969,6 +969,34 @@ is tuned to this particular render; replace the image and the percentages in
     labels, stub-page steps. Code comments are exempt, since nobody browsing the
     site reads them.
 
+## Touch
+
+Everything the homepage does for a phone lives in `@media (pointer: coarse)`
+blocks at the foot of each component's stylesheet, and nothing in them is keyed
+to a width. That is deliberate. The two problems being fixed are a finger being
+wider than a mouse pointer and a touch screen having no hover, and neither of
+those is a question of how many pixels across the screen is.
+
+Two things worth knowing before editing them.
+
+- **An affordance that only exists on hover does not exist on a phone.** The
+  hero's fork cards are buttons, and the arrow saying so was revealed on hover,
+  then hidden outright on narrow screens because it never appeared. The result
+  was a primary call to action that looked like a paragraph in a box. It now
+  shows the arrow under `(hover: none)`. Any future hover-only cue on a
+  clickable thing has the same bug.
+- **A pad on a wrapped inline link does nothing.** Single line inline links get
+  their target enlarged with an absolutely positioned `::after`, which leaves
+  the sentence's shape alone. On a link that wraps onto two lines the pad is
+  laid out from the inline's fragments and lands somewhere useless: hit tested,
+  it did nothing at all. Those get line height instead, which is a real target
+  and a more readable sentence. `WherePlay`'s `.away` is the worked example.
+
+The numbers being aimed at are a 44px target and roughly 11px of text. Both were
+measured rather than guessed, with a headless browser at 390x844 driving the
+local production build, checking every element's box and hit testing the
+invisible targets.
+
 ## Copy style
 
 Beyond rule 15: no exclamation marks, no "revolutionary" or "seamless", no

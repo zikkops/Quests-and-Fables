@@ -203,3 +203,36 @@
     gap: 22px;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Touch
+
+   Eight links stacked 9px apart at 23px tall is the worst tap target on the
+   page. The padding replaces the gap rather than adding to it, so the column is
+   the same shape and each row is a whole finger.
+   --------------------------------------------------------------------------- */
+@media (pointer: coarse) {
+  .columnTitle {
+    font-size: 11.5px;
+  }
+
+  .column {
+    gap: 0;
+  }
+
+  .link {
+    padding: 11px 0;
+  }
+
+  /* Inline in a sentence, and the one link with a licence obligation resting on
+     it, so it gets room to be hit without the sentence changing shape. */
+  .creditLink {
+    position: relative;
+  }
+
+  .creditLink::after {
+    content: "";
+    position: absolute;
+    inset: -12px -6px;
+  }
+}

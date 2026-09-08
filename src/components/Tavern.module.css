@@ -459,3 +459,20 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Touch
+
+   The bubble and the role sit on an em chain off a container query, which lands
+   near 10px once the scene is phone width. Fixed sizes here, because the point
+   of the copy is that you can read what each person came for.
+   --------------------------------------------------------------------------- */
+@media (pointer: coarse) {
+  .bubbleName {
+    font-size: 11.5px;
+  }
+
+  .cardRole {
+    font-size: 11.5px;
+  }
+}

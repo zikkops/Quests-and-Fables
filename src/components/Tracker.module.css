@@ -704,3 +704,59 @@
     align-items: flex-start;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Touch
+
+   This is a character sheet, so it is the densest thing on the homepage, and it
+   is also the one the copy invites you to break. On a phone it was 9px labels
+   and 26px buttons: readable as a picture of a tracker, not usable as one.
+
+   The labels come up to something a phone can read, and every control that the
+   copy says to press comes up to a fingertip.
+   --------------------------------------------------------------------------- */
+@media (pointer: coarse) {
+  .stat dt,
+  .moreHeading {
+    font-size: 11px;
+  }
+
+  .saveLabel {
+    font-size: 10.5px;
+  }
+
+  .short {
+    font-size: 10px;
+  }
+
+  .slotLevel {
+    width: 22px;
+    font-size: 11.5px;
+  }
+
+  .step,
+  .stepTemp {
+    min-width: 42px;
+    padding: 11px 8px;
+    font-size: 13px;
+  }
+
+  .amount {
+    width: 54px;
+    padding: 10px 2px;
+    font-size: 13px;
+  }
+
+  .condition,
+  .exhaustion,
+  .add {
+    padding: 12px 13px;
+    font-size: 12px;
+  }
+
+  .rest,
+  .restLong,
+  .reset {
+    padding: 12px 16px;
+  }
+}

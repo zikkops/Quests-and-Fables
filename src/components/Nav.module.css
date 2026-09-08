@@ -69,3 +69,20 @@
     display: none;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Touch
+
+   The wordmark is the way home and was 24px tall.
+   --------------------------------------------------------------------------- */
+@media (pointer: coarse) {
+  .wordmark {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+
+  .signIn {
+    min-height: 44px;
+  }
+}

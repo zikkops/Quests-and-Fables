@@ -114,3 +114,23 @@
     justify-self: center;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Touch
+
+   Inline in a sentence, so the target grows around it rather than under it.
+   --------------------------------------------------------------------------- */
+@media (pointer: coarse) {
+  /*
+    This link wraps onto two lines, and that rules out the trick used elsewhere:
+    an absolutely positioned pad on an inline box is laid out from its fragments,
+    so on a wrapped link it lands somewhere useless. Hit tested, it did nothing.
+
+    Opening the line height is the honest version. It puts real space above and
+    below both lines of the link, which is a bigger target and an easier
+    sentence to read at the same time.
+  */
+  .away {
+    line-height: 2;
+  }
+}

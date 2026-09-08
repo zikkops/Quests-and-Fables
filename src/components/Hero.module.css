@@ -398,3 +398,39 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Touch
+
+   The fork cards are buttons, and the only thing that said so was an arrow on
+   hover. A phone has no hover, so the arrow was hidden to stop it costing a
+   line of height, and the main call to action on the page was left looking like
+   a paragraph in a box. Everything that read as tappable above the fold was
+   Sign in and the game master's link, which are the two things a player has not
+   come for.
+
+   So on a touch screen the arrow is shown outright instead. It is the same
+   affordance the desktop gets, just not gated on an interaction that cannot
+   happen.
+   --------------------------------------------------------------------------- */
+@media (hover: none) {
+  .cardArrow {
+    display: block;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (pointer: coarse) {
+  /* The underline is the visual here, so the target grows around the words
+     rather than under them. Padding would drop the rule away from the text. */
+  .recruitLink {
+    position: relative;
+  }
+
+  .recruitLink::after {
+    content: "";
+    position: absolute;
+    inset: -13px -10px;
+  }
+}
