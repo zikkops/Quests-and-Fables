@@ -122,7 +122,28 @@ by their build pipeline. Firestore rules are **not** part of that deploy: they
 go up separately with `npx firebase-tools deploy --only firestore:rules`, and
 forgetting that is how the site ends up live against yesterday's rules.
 
-Three things about the deploy that are not obvious:
+**Node 22, and the build runs webpack, not Turbopack.** Both are about the same
+thing: the build machine's glibc. Next ships `@next/swc` as a native binary that
+needs glibc 2.28 or newer, and Hostinger was building on an image older than
+that. Next does not fail there, which is the confusing part. It quietly falls
+back to its WebAssembly build of SWC and carries on, and then Turbopack refuses,
+because Turbopack is the one part with no WebAssembly version:
+
+    Turbopack is not supported on this platform because native bindings are not
+    available. Only WebAssembly (WASM) bindings were loaded. Use the --webpack
+    flag instead.
+
+So `npm run build` passes `--webpack`, which builds happily on the same
+WebAssembly that was already loading. It is slower, and it is not the default
+any more, but it produces the same seventeen routes. `next dev` still uses
+Turbopack, because a development machine has working native bindings.
+
+Node 22 is the other half. `engines` and `.nvmrc` both ask for it, and the
+Hostinger panel has to be set to match, because the panel is what actually
+chooses the image. If a Turbopack build ever succeeds there, the glibc is new
+enough and the `--webpack` flag can come off.
+
+Three more things about the deploy that are not obvious:
 
 - **The Next config is `next.config.mjs`, and it must stay JavaScript.** A
   TypeScript config cannot be loaded as it stands. Next has to compile it first,
@@ -148,7 +169,7 @@ Three things about the deploy that are not obvious:
 
 | Layer | Choice |
 |---|---|
-| Framework | Next.js 16 (App Router, Turbopack), React 19.2, TypeScript |
+| Framework | Next.js 16 (App Router, Turbopack in dev, webpack in build), React 19.2, TypeScript |
 | Styling | CSS Modules + design tokens in `src/app/globals.css` |
 | Animation | GSAP 3 + `@gsap/react` (`useGSAP` cleans up on unmount, so animations don't leak across routes) |
 | Database / auth | Firebase: Auth (email and password) + Firestore. **Live, with `firestore.rules` deployed and tested** — see [Accounts](#accounts) |
