@@ -42,7 +42,7 @@ const MIN_PASSWORD = 8;
  * they cannot finish.
  */
 export default function SignIn() {
-  const { user, profile, loading, configured } = useSession();
+  const { user, profile, profileUnread, loading, configured } = useSession();
   const router = useRouter();
 
   const [mode, setMode] = useState<Mode>("in");
@@ -62,8 +62,15 @@ export default function SignIn() {
   /* Already in. Somebody half registered goes to finish it. */
   useEffect(() => {
     if (loading || !user || madeIt) return;
+    /* Only "there is no profile" sends somebody to set one up. "We could not
+       read it" sends them to their account, which says so and offers a retry:
+       a timeout is not a reason to ask a player to register twice. */
+    if (!profile && profileUnread) {
+      router.replace("/account");
+      return;
+    }
     router.replace(profile ? "/account" : "/account/setup");
-  }, [loading, user, profile, madeIt, router]);
+  }, [loading, user, profile, profileUnread, madeIt, router]);
 
   if (!configured) {
     return (

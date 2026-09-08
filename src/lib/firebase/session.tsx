@@ -36,6 +36,12 @@ type Session = {
   user: User | null;
   profile: Profile | null;
   /**
+   * The profile could not be read. Not the same as not having one, and the
+   * difference matters: only the second is a reason to send somebody to set
+   * their account up.
+   */
+  profileUnread: boolean;
+  /**
    * Whether this account carries the `admin` custom claim.
    *
    * Read off the ID token, never off a database field, because a field is
@@ -65,6 +71,7 @@ type Session = {
 const SessionContext = createContext<Session>({
   user: null,
   profile: null,
+  profileUnread: false,
   admin: false,
   verified: false,
   loading: true,
@@ -78,6 +85,8 @@ export const useSession = () => useContext(SessionContext);
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
+  /** True when the profile could not be read, as opposed to not existing. */
+  const [profileUnread, setProfileUnread] = useState(false);
   const [admin, setAdmin] = useState(false);
   const [verified, setVerified] = useState(false);
   /* Start at "still looking" only if there is somewhere to look. With no
@@ -104,10 +113,19 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
         try {
           setProfile(await getProfile(next.uid));
+          setProfileUnread(false);
         } catch {
-          /* Offline, or rules not deployed yet. Treat as "no profile" rather
-             than crashing the tree: the setup page can say so. */
+          /*
+            Offline, a timeout, rules not deployed. Still null so nothing
+            crashes, but flagged, because "we could not read it" and "there
+            isn't one" are different facts and only one of them means somebody
+            should be sent to set their account up.
+
+            Conflating the two is how a player with a perfectly good profile
+            ended up on /account/setup filling the form in again.
+          */
           setProfile(null);
+          setProfileUnread(true);
         }
       } else {
         setProfile(null);
@@ -142,6 +160,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       value={{
         user,
         profile,
+      profileUnread,
         admin,
         verified,
         loading,
@@ -202,8 +221,28 @@ export function saySorry(problem: unknown): string {
       /* Almost always the one thing nobody remembers to switch on. */
       return "Email and password sign-in is not enabled on this Firebase project yet.";
 
-    default:
-      return (problem as Error)?.message ?? "Something went wrong.";
+    case "permission-denied":
+    case "firestore/permission-denied":
+      /*
+        Firestore's own message for this is four lines of rule internals quoting
+        line numbers out of firestore.rules. It is exactly what you want in a
+        terminal and exactly what nobody should ever be shown, so it stops here.
+      */
+      return "That is not something this account is allowed to do.";
+
+    case "unavailable":
+    case "firestore/unavailable":
+      return "Could not reach the database. Check your connection and try again.";
+
+    default: {
+      const message = (problem as Error)?.message ?? "";
+      /* Belt and braces: a rules refusal that arrives without its code still
+         must not put line numbers on screen. */
+      if (message.includes("PERMISSION_DENIED") || message.includes("firestore.rules")) {
+        return "That is not something this account is allowed to do.";
+      }
+      return message || "Something went wrong.";
+    }
   }
 }
 

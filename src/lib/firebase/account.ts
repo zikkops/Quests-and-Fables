@@ -75,7 +75,33 @@ export async function createProfile(input: {
 
   await runTransaction(instance, async (tx) => {
     const lock = doc(instance, PATHS.usernames, lower);
+    const mine = doc(instance, PATHS.profiles, input.uid);
+
+    /* Every read before any write: a transaction requires it. */
     const existing = await tx.get(lock);
+    const already = await tx.get(mine);
+
+    /*
+      Never write over a profile that is already there.
+
+      Without this, `tx.set` on an existing profile is an update rather than a
+      create, and the rules refuse it because `createdAt` may not move. What
+      reached the player was four lines of rule internals naming line numbers in
+      firestore.rules, from a screen they should not have been on in the first
+      place.
+
+      They get there when the session cannot read their profile and reports "no
+      profile" instead: a timeout, being briefly offline, anything. Both this and
+      the redirect that sends them are worth fixing, but this is the one that
+      makes the whole class of it harmless.
+    */
+    if (already.exists()) {
+      throw new Error(
+        "You already have a profile. Nothing here needed setting up, "
+        + "and your account is where you edit it.",
+      );
+    }
+
     if (existing.exists()) {
       throw new Error("That username has just been taken. Try another.");
     }

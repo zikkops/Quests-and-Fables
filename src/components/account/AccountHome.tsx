@@ -43,15 +43,16 @@ import home from "./AccountHome.module.css";
  * on its own button.
  */
 export default function AccountHome() {
-  const { user, profile, loading, configured, refresh, leave } = useSession();
+  const { user, profile, profileUnread, loading, configured, refresh, leave } = useSession();
   const router = useRouter();
   const where = useStanding();
 
   useEffect(() => {
     if (loading || !configured) return;
     if (!user) router.replace("/sign-in");
-    else if (!profile) router.replace("/account/setup");
-  }, [loading, configured, user, profile, router]);
+    /* Not when it merely could not be read: that is a retry, not a signup. */
+    else if (!profile && !profileUnread) router.replace("/account/setup");
+  }, [loading, configured, user, profile, profileUnread, router]);
 
   if (!configured) {
     return (
@@ -62,6 +63,23 @@ export default function AccountHome() {
           keys are in the environment there is no account to show, and the parts
           of the site that never needed one carry on as they are.
         </p>
+      </section>
+    );
+  }
+
+  /* Read failed rather than came back empty. Without its own branch this sat
+     on "One moment" forever, which is the least useful thing a screen can do. */
+  if (!loading && user && !profile && profileUnread) {
+    return (
+      <section className={styles.card}>
+        <h2 className={styles.cardTitle}>Could not read your account</h2>
+        <p className={styles.cardBody}>
+          Your profile is there, this browser just could not fetch it. Usually a
+          connection that dropped for a second.
+        </p>
+        <button type="button" className={styles.primary} onClick={() => refresh()}>
+          Try again
+        </button>
       </section>
     );
   }
