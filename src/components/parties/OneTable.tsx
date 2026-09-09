@@ -13,7 +13,8 @@ import {
 import { useSession } from "@/lib/firebase/session";
 import { findArea } from "@/data/lebanon";
 import { describeSlot, PARTY_MAX, type Party } from "@/lib/party";
-import { fitFor, fits, type Fit } from "@/lib/match";
+import { fitFor, fits, keepApart, type Fit } from "@/lib/match";
+import { myBlocks, type Block } from "@/lib/firebase/block";
 import { limitLabel, type LimitKey } from "@/lib/firebase/schema";
 import GmStanding from "./GmStanding";
 import styles from "./Parties.module.css";
@@ -45,6 +46,22 @@ export default function OneTable({ partyId }: { partyId: string }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [round, setRound] = useState(0);
+  const [blocks, setBlocks] = useState<Block[]>([]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    let alive = true;
+    myBlocks(user.uid)
+      .then((mine) => {
+        if (alive) setBlocks(mine);
+      })
+      .catch(() => {});
+
+    return () => {
+      alive = false;
+    };
+  }, [user]);
 
   useEffect(() => {
     if (!configured) return;
@@ -139,7 +156,9 @@ export default function OneTable({ partyId }: { partyId: string }) {
   }
 
   const seatsLeft = Math.max(0, PARTY_MAX - party.playerIds.length);
-  const fit: Fit | null = profile ? fitFor(profile, party) : null;
+  const fit: Fit | null = profile
+    ? fitFor(profile, party, keepApart(profile.uid, blocks))
+    : null;
   const table = party.profile;
 
   const ask = async () => {

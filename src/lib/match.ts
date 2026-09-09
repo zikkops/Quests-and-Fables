@@ -202,7 +202,8 @@ export type Blocker =
   | { kind: "language"; detail: string }
   | { kind: "full"; detail: string }
   | { kind: "closed"; detail: string }
-  | { kind: "already"; detail: string };
+  | { kind: "already"; detail: string }
+  | { kind: "apart"; detail: string };
 
 export type Fit = {
   /** The hours this player shares with everybody already at the table. */
@@ -328,7 +329,28 @@ function languageClash(player: Profile, table: PartyProfile): string | null {
   return `This table plays in ${spoken}, which you have not said you speak.`;
 }
 
-export function fitFor(player: Profile, party: Party): Fit {
+/**
+ * Everybody one player must not be seated with.
+ *
+ * Both directions, which is the point: a block is about two people never being
+ * put together, and which of them made it is nobody's business but theirs. Feed
+ * it every block you can see. A browser can only see the player's own, so it
+ * gets half an answer and that half is honest. The admin console sees all of
+ * them and gets the whole one, which is where it matters, because the house is
+ * what actually seats people.
+ */
+export function keepApart(uid: string, blocks: { by: string; who: string }[]): Set<string> {
+  const apart = new Set<string>();
+
+  for (const block of blocks) {
+    if (block.by === uid) apart.add(block.who);
+    if (block.who === uid) apart.add(block.by);
+  }
+
+  return apart;
+}
+
+export function fitFor(player: Profile, party: Party, apart?: Set<string>): Fit {
   const blockers: Blocker[] = [];
   const table = party.profile ?? EMPTY_PROFILE;
 
@@ -362,6 +384,24 @@ export function fitFor(player: Profile, party: Party): Fit {
   if (language) blockers.push({ kind: "language", detail: language });
 
   /*
+    A block, in either direction.
+
+    The wording is deliberately the same whichever way round it is, and names
+    nobody. Saying "somebody here blocked you" would be telling a person they
+    have been blocked, which is the one thing a block must never do. Saying
+    "you blocked somebody here" would be safe on its own but the two messages
+    have to be indistinguishable, or the vague one identifies the other case by
+    elimination.
+  */
+  const seated = [...party.playerIds, ...(party.gmId ? [party.gmId] : [])];
+  if (apart && seated.some((uid) => apart.has(uid))) {
+    blockers.push({
+      kind: "apart",
+      detail: "This is not a table we can offer you. We do not say why, and that is deliberate.",
+    });
+  }
+
+  /*
     The score, in the order these things actually matter.
 
     Hours dominate everything: a table you cannot attend is not a table, however
@@ -386,9 +426,9 @@ export function fitFor(player: Profile, party: Party): Fit {
  * "May be shown" is doing the work. A party with a blocker is not ranked last.
  * It is not in the list, and there is no flag to turn that off.
  */
-export const openTo = (player: Profile, parties: Party[]) =>
+export const openTo = (player: Profile, parties: Party[], apart?: Set<string>) =>
   parties
-    .map((party) => ({ party, fit: fitFor(player, party) }))
+    .map((party) => ({ party, fit: fitFor(player, party, apart) }))
     .filter((one) => fits(one.fit))
     .sort((a, b) => b.fit.score - a.fit.score);
 

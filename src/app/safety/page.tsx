@@ -98,9 +98,11 @@ export default function SafetyPage() {
         {
           title: "Report, block, and remove",
           body:
-            "Report or block anyone from their profile. A game master can remove "
-            + "someone from their party immediately, without explaining themselves "
-            + "first. Reports go to a real person.",
+            "Report anyone from anything they wrote, and block them from the same "
+            + "place. A block means you are never put in a party with them again, "
+            + "and they are never told. A game master can remove someone from their "
+            + "party immediately, without explaining themselves first. Reports go "
+            + "to a real person.",
         },
         {
           title: "Session Zero, before you play",

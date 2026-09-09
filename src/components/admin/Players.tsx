@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { createParty, setGameMaster } from "@/lib/firebase/party";
-import { aggregate } from "@/lib/match";
+import type { Block } from "@/lib/firebase/block";
+import { aggregate, keepApart } from "@/lib/match";
 import { findArea, LIVE_LEBANON } from "@/data/lebanon";
 import type { Profile } from "@/lib/firebase/schema";
 import {
@@ -18,6 +19,8 @@ import styles from "./Admin.module.css";
 
 type Props = {
   profiles: Profile[] | null;
+  /** Every block there is, so a party is never built across one. */
+  blocks: Block[];
   parties: Party[];
   /** uid to party name, for anybody already at a table. */
   spokenFor: Map<string, string>;
@@ -39,7 +42,7 @@ const areaName = (slug: string) => findArea(slug)?.area.name ?? slug;
  * in the product that can show two hundred of them at once, and it is the kind
  * of screen people photograph to send to somebody else.
  */
-export default function Players({ profiles, parties, spokenFor, onChanged }: Props) {
+export default function Players({ profiles, parties, blocks, spokenFor, onChanged }: Props) {
   const [term, setTerm] = useState("");
   const [area, setArea] = useState("");
   const [freeOnly, setFreeOnly] = useState(false);
@@ -88,6 +91,25 @@ export default function Players({ profiles, parties, spokenFor, onChanged }: Pro
   const form = async () => {
     setError(null);
     setBusy(true);
+
+    /*
+      Nobody is put in a room with somebody they blocked, or with somebody who
+      blocked them. Checked here rather than trusted to the person clicking,
+      because this is the screen that actually assembles a table and the pair
+      it would seat cannot see each other's blocks to object.
+    */
+    for (const one of chosen) {
+      const apart = keepApart(one.uid, blocks);
+      const other = chosen.find((candidate) => apart.has(candidate.uid));
+      if (other) {
+        setError(
+          `${one.username} and ${other.username} must not be seated together. `
+          + "Take one of them out of this party.",
+        );
+        setBusy(false);
+        return;
+      }
+    }
 
     try {
       /* Where they play, decided by where most of them already are rather than

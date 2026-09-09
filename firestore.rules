@@ -779,6 +779,49 @@ service cloud.firestore {
       }
     }
 
+    /* ---- blocks -----------------------------------------------------------
+       "Never put me with this person again." The last of the four things
+       /safety promises.
+
+       **Only the person who made it can read it, and an admin.** Not the
+       person blocked, not ever, and that is the single most important line in
+       this rule. A block somebody can discover is a block with a cost attached
+       to making it, and the people most in need of one are exactly the people
+       who cannot afford that cost. It is also why nothing anywhere says why a
+       table was not offered.
+
+       Top level rather than under a profile, for the same reason seat requests
+       are: matching has to ask "every block that exists" and the alternative is
+       a collection group query, which needs the database-wide wildcard this
+       file opens by refusing to have.
+
+       The id is `{by}_{who}`, which the rules never parse. It exists so that
+       blocking twice writes the same document rather than a second one, and so
+       an unblock has something to address. Ownership is proved by the `by`
+       field, not by the id.
+       -------------------------------------------------------------------- */
+    match /blocks/{blockId} {
+      allow read: if isAdmin()
+                  || (signedIn() && resource.data.by == request.auth.uid);
+
+      allow create: if signedIn()
+                    && inGoodStanding(request.auth.uid)
+                    && request.resource.data.by == request.auth.uid
+                    && request.resource.data.who is string
+                    && request.resource.data.who != request.auth.uid
+                    && request.resource.data.name is string
+                    && request.resource.data.name.size() <= 60
+                    && request.resource.data.at is int
+                    && request.resource.data.keys().hasOnly(['by', 'who', 'name', 'at']);
+
+      /* Not edited. Changing who a block is about is making a different block. */
+      allow update: if false;
+
+      /* Yours to lift. Blocking is a decision about the future, not a verdict,
+         and one somebody has to be able to change their mind about. */
+      allow delete: if signedIn() && resource.data.by == request.auth.uid;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

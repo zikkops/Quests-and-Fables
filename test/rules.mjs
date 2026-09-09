@@ -788,6 +788,48 @@ await check("who said what is not public, and not the game master's to read", as
   await assertSucceeds(getDoc(doc(admin("root"), "gmRatings/gmR/ratings", "bob")));
 });
 
+/* ========================================================================
+   Blocks
+   ======================================================================== */
+console.log("");
+console.log("Blocks");
+
+await check("a player blocks somebody", async () => {
+  await assertSucceeds(setDoc(doc(player("bob"), "blocks", "bob_carol"), {
+    by: "bob", who: "carol", name: "Carol", at: Date.now(),
+  }));
+});
+
+await check("a block cannot be made in somebody else's name", async () => {
+  await assertFails(setDoc(doc(player("dan"), "blocks", "bob_erin"), {
+    by: "bob", who: "erin", name: "Erin", at: Date.now(),
+  }));
+});
+
+await check("nobody blocks themselves", async () => {
+  await assertFails(setDoc(doc(player("bob"), "blocks", "bob_bob"), {
+    by: "bob", who: "bob", name: "Bob", at: Date.now(),
+  }));
+});
+
+await check("the person blocked can never find out", async () => {
+  await assertFails(getDoc(doc(player("carol"), "blocks", "bob_carol")));
+  await assertFails(getDoc(doc(stranger(), "blocks", "bob_carol")));
+  await assertSucceeds(getDoc(doc(player("bob"), "blocks", "bob_carol")));
+  /* The matcher has to see every one of them, or it cannot keep people apart. */
+  await assertSucceeds(getDoc(doc(admin("root"), "blocks", "bob_carol")));
+});
+
+await check("a block is not edited into a different one", async () => {
+  await assertFails(updateDoc(doc(player("bob"), "blocks", "bob_carol"), { who: "dan" }));
+});
+
+await check("only the person who made it can lift it", async () => {
+  await assertFails(deleteDoc(doc(player("carol"), "blocks", "bob_carol")));
+  await assertFails(deleteDoc(doc(player("dan"), "blocks", "bob_carol")));
+  await assertSucceeds(deleteDoc(doc(player("bob"), "blocks", "bob_carol")));
+});
+
 await check("the final deny still denies", async () => {
   await assertFails(getDoc(doc(player("bob"), "anythingElse", "x")));
   await assertFails(setDoc(doc(admin("root"), "anythingElse", "x"), { a: 1 }));

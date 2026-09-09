@@ -34,6 +34,7 @@ import type { PlaySession, SessionNote } from "@/lib/notebook";
 import Tracker from "../Tracker";
 import Notebook, { type Draft } from "../notebook/Notebook";
 import ReportDialog from "./ReportDialog";
+import BlockDialog from "./BlockDialog";
 import RateGameMaster from "./RateGameMaster";
 import Roster from "./Roster";
 import SessionZeroCard from "./SessionZeroCard";
@@ -61,6 +62,8 @@ export default function Campaign({ partyId }: { partyId: string }) {
   const [sheets, setSheets] = useState<TableSheet[]>([]);
   /** The note somebody is reporting, if any. */
   const [reporting, setReporting] = useState<SessionNote | null>(null);
+  /** Who somebody is about to block, and what they know them as. */
+  const [blocking, setBlocking] = useState<{ uid: string; name: string } | null>(null);
   const [sessions, setSessions] = useState<PlaySession[]>([]);
   const [notes, setNotes] = useState<SessionNote[]>([]);
   const [gmNotes, setGmNotes] = useState<SessionNote[]>([]);
@@ -485,12 +488,39 @@ export default function Campaign({ partyId }: { partyId: string }) {
             onAdd={write}
             onRemove={erase}
             onReport={setReporting}
+            onBlock={(note) => setBlocking({ uid: note.authorId, name: note.authorName })}
           />
         )}
       </section>
 
       {role === "player" && profile && party.gmId && party.status === "playing" ? (
         <RateGameMaster partyId={partyId} gmId={party.gmId} uid={profile.uid} />
+      ) : null}
+
+      {role === "player" && profile && party.gmId ? (
+        <p className={styles.quiet}>
+          You do not have to play with the same game master again.{" "}
+          <button
+            type="button"
+            className={styles.plainButton}
+            onClick={() =>
+              setBlocking({ uid: party.gmId as string, name: "your game master" })
+            }
+          >
+            Ask never to be seated with them again
+          </button>
+          . They are never told, and it does not change this table.
+        </p>
+      ) : null}
+
+      {blocking && profile ? (
+        <BlockDialog
+          by={profile.uid}
+          who={blocking.uid}
+          name={blocking.name}
+          onClose={() => setBlocking(null)}
+          onBlocked={() => {}}
+        />
       ) : null}
 
       {reporting && profile ? (

@@ -6,7 +6,8 @@ import { listParties, myRequests, type SeatRequest } from "@/lib/firebase/party"
 import { useSession } from "@/lib/firebase/session";
 import { findArea } from "@/data/lebanon";
 import { describeSlot, PARTY_MAX, type Party } from "@/lib/party";
-import { openTo, publicView, seatsOpen, type Fit } from "@/lib/match";
+import { keepApart, openTo, publicView, seatsOpen, type Fit } from "@/lib/match";
+import { myBlocks, type Block } from "@/lib/firebase/block";
 import styles from "./Parties.module.css";
 
 type Props = {
@@ -37,6 +38,7 @@ export default function OpenTables({ area }: Props) {
 
   const [parties, setParties] = useState<Party[] | null>(null);
   const [asked, setAsked] = useState<SeatRequest[]>([]);
+  const [blocks, setBlocks] = useState<Block[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [round, setRound] = useState(0);
 
@@ -62,6 +64,30 @@ export default function OpenTables({ area }: Props) {
     };
   }, [configured, round]);
 
+  /*
+    Only this player's own blocks, because those are the only ones they are
+    allowed to read. That covers "do not show me a table with somebody I
+    blocked". The other direction cannot be done here and is not meant to be:
+    finding out you have been blocked is the thing a block must never do. The
+    matcher has the whole picture and is what actually seats people.
+  */
+  useEffect(() => {
+    if (!user) return;
+
+    let alive = true;
+    myBlocks(user.uid)
+      .then((mine) => {
+        if (alive) setBlocks(mine);
+      })
+      .catch(() => {
+        /* Nothing blocked, or rules not deployed. Not worth a message. */
+      });
+
+    return () => {
+      alive = false;
+    };
+  }, [user, round]);
+
   useEffect(() => {
     if (!user) return;
 
@@ -85,7 +111,7 @@ export default function OpenTables({ area }: Props) {
     const byArea = (party: Party) => !area || party.area === area;
 
     if (profile) {
-      return openTo(profile, parties)
+      return openTo(profile, parties, keepApart(profile.uid, blocks))
         .filter((one) => byArea(one.party))
         .map((one) => ({ party: one.party, fit: one.fit as Fit | null }));
     }
@@ -93,7 +119,7 @@ export default function OpenTables({ area }: Props) {
     return publicView(parties)
       .filter(byArea)
       .map((party) => ({ party, fit: null }));
-  }, [parties, profile, area]);
+  }, [parties, profile, area, blocks]);
 
   const askedFor = useMemo(
     () => new Map(asked.map((request) => [request.partyId, request])),

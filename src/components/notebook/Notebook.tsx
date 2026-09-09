@@ -43,6 +43,13 @@ type Props = {
    * user-written thing anybody else can see here.
    */
   onReport?: (note: SessionNote) => void;
+  /**
+   * Never be put at a table with this person again. Sits beside Report because
+   * this is the only place a player learns another player's name at all, and
+   * the two answer different questions: a report is about tonight and goes to a
+   * person, a block is about every evening after it and goes to the matcher.
+   */
+  onBlock?: (note: SessionNote) => void;
 };
 
 const when = (stamp: number) =>
@@ -66,7 +73,15 @@ const when = (stamp: number) =>
  * clicking produces one. `firestore.rules` is what actually stops them. This is
  * only the part that stops it being confusing.
  */
-export default function Notebook({ sessions, notes, viewer, onAdd, onRemove, onReport }: Props) {
+export default function Notebook({
+  sessions,
+  notes,
+  viewer,
+  onAdd,
+  onRemove,
+  onReport,
+  onBlock,
+}: Props) {
   const ordered = useMemo(() => [...sessions].sort(byRecency), [sessions]);
   const openSession = ordered.find((s) => s.open) ?? ordered[0];
 
@@ -244,6 +259,7 @@ export default function Notebook({ sessions, notes, viewer, onAdd, onRemove, onR
                       mine={note.authorId === viewer.id}
                       onRemove={onRemove}
                       onReport={onReport}
+                      onBlock={onBlock}
                     />
                   ))}
                 </ol>
@@ -276,12 +292,14 @@ function Entry({
   mine,
   onRemove,
   onReport,
+  onBlock,
 }: {
   note: SessionNote;
   query: string;
   mine: boolean;
   onRemove?: (id: string) => void;
   onReport?: (note: SessionNote) => void;
+  onBlock?: (note: SessionNote) => void;
 }) {
   const runs = query ? highlight(note.body, query) : [{ text: note.body, hit: false }];
 
@@ -300,6 +318,16 @@ function Entry({
             title={`Report this note by ${note.authorName}`}
           >
             Report
+          </button>
+        ) : null}
+        {!mine && onBlock ? (
+          <button
+            type="button"
+            className={styles.report}
+            onClick={() => onBlock(note)}
+            title={`Never be seated with ${note.authorName} again`}
+          >
+            Block
           </button>
         ) : null}
         {mine && onRemove ? (

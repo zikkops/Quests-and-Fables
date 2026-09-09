@@ -7,7 +7,8 @@ import {
   waitingRequests,
   type SeatRequest,
 } from "@/lib/firebase/party";
-import { aggregate } from "@/lib/match";
+import type { Block } from "@/lib/firebase/block";
+import { aggregate, keepApart } from "@/lib/match";
 import type { Profile } from "@/lib/firebase/schema";
 import { PARTY_MAX, type Party } from "@/lib/party";
 import styles from "./Admin.module.css";
@@ -15,6 +16,8 @@ import styles from "./Admin.module.css";
 type Props = {
   parties: Party[];
   profiles: Profile[];
+  /** Every block there is. Only this console can see them both ways. */
+  blocks: Block[];
   onChanged: () => void;
 };
 
@@ -26,7 +29,7 @@ type Props = {
  * so it keeps matching honestly. That last one is the easy one to forget, and
  * forgetting it means a table advertising hours its newest member cannot make.
  */
-export default function Requests({ parties, profiles, onChanged }: Props) {
+export default function Requests({ parties, profiles, blocks, onChanged }: Props) {
   const [waiting, setWaiting] = useState<SeatRequest[] | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -63,6 +66,22 @@ export default function Requests({ parties, profiles, onChanged }: Props) {
 
     if (party.playerIds.length >= PARTY_MAX) {
       setError(`${party.name} is full. Decline this one or make room first.`);
+      return;
+    }
+
+    /*
+      A block, in either direction, and this is the only screen that can see
+      both. The error names nobody: an admin does not need to know which way
+      round it went to know not to seat them, and saying would hand one player
+      the fact that the other blocked them.
+    */
+    const apart = keepApart(player.uid, blocks);
+    const seated = [...party.playerIds, ...(party.gmId ? [party.gmId] : [])];
+    if (seated.some((uid) => apart.has(uid))) {
+      setError(
+        `${player.username} and somebody already at ${party.name} must not be `
+        + "seated together. Decline this one and find them another table.",
+      );
       return;
     }
 

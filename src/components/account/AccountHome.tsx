@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { myBlocks, unblock, type Block } from "@/lib/firebase/block";
 import Link from "next/link";
 import { LIVE_LEBANON } from "@/data/lebanon";
 import { updateProfile } from "@/lib/firebase/account";
@@ -194,6 +195,8 @@ export default function AccountHome() {
         limits={profile.limits}
         onSaved={refresh}
       />
+
+      <Blocked uid={user.uid} />
 
       <Characters uid={user.uid} count={profile.characterCount} onChanged={refresh} />
     </>
@@ -741,5 +744,80 @@ function Safety({
 
       <Save dirty={dirty} busy={busy} saved={saved} />
     </form>
+  );
+}
+
+/* ==========================================================================
+   Who you will not be seated with
+   ========================================================================== */
+
+/**
+ * The blocks this person has made, and the only way to lift one.
+ *
+ * It has to exist. Blocking anywhere else in the product is a one way door
+ * otherwise, and a decision somebody cannot revisit is a decision they will
+ * hesitate to make, which defeats the point of having it.
+ *
+ * Names rather than ids, because a uid is not something anybody recognises on
+ * their own account a month later. The name is whatever they were known as at
+ * the table when the block was made, stored on the block for exactly this.
+ */
+function Blocked({ uid }: { uid: string }) {
+  const [blocks, setBlocks] = useState<Block[] | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(() => {
+    myBlocks(uid)
+      .then(setBlocks)
+      .catch(() => setBlocks([]));
+  }, [uid]);
+
+  useEffect(load, [load]);
+
+  const lift = async (who: string) => {
+    setError(null);
+    setBusy(who);
+
+    try {
+      await unblock(uid, who);
+      load();
+    } catch (problem) {
+      setError((problem as Error).message);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  if (blocks === null || blocks.length === 0) return null;
+
+  return (
+    <section className={`${styles.card} ${styles.wide}`}>
+      <h2 className={styles.cardTitle}>People you will not be seated with</h2>
+
+      <p className={styles.help}>
+        You will never be put in a party with these people. They have not been
+        told and never are. Lifting a block only means you could be matched
+        again, not that you will be.
+      </p>
+
+      {error ? <p className={styles.error}>{error}</p> : null}
+
+      <ul className={styles.blocks}>
+        {blocks.map((block) => (
+          <li key={block.who} className={styles.blocked}>
+            <span className={styles.blockedName}>{block.name}</span>
+            <button
+              type="button"
+              className={styles.secondary}
+              onClick={() => lift(block.who)}
+              disabled={busy === block.who}
+            >
+              {busy === block.who ? "One moment" : "Lift it"}
+            </button>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }

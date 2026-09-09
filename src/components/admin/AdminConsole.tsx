@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { listParties, listProfiles } from "@/lib/firebase/party";
+import { allBlocks, type Block } from "@/lib/firebase/block";
 import { useSession } from "@/lib/firebase/session";
 import type { Profile } from "@/lib/firebase/schema";
 import { type Party } from "@/lib/party";
@@ -32,6 +33,7 @@ export default function AdminConsole() {
 
   const [profiles, setProfiles] = useState<Profile[] | null>(null);
   const [parties, setParties] = useState<Party[] | null>(null);
+  const [blocks, setBlocks] = useState<Block[]>([]);
   const [round, setRound] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
@@ -40,11 +42,18 @@ export default function AdminConsole() {
 
     let alive = true;
 
-    Promise.all([listProfiles(), listParties()])
-      .then(([people, groups]) => {
+    /*
+      Blocks come with the profiles, because seating is where they are actually
+      enforced. This is the only place in the product that can see them in both
+      directions, and a player who blocked somebody must not be handed to them
+      by an admin who could not see it.
+    */
+    Promise.all([listProfiles(), listParties(), allBlocks()])
+      .then(([people, groups, kept]) => {
         if (!alive) return;
         setProfiles(people);
         setParties(groups);
+        setBlocks(kept);
       })
       .catch((problem: Error) => {
         if (!alive) return;
@@ -125,6 +134,7 @@ export default function AdminConsole() {
 
       <Players
         profiles={profiles}
+        blocks={blocks}
         parties={parties ?? []}
         spokenFor={spokenFor}
         onChanged={reload}
@@ -132,7 +142,12 @@ export default function AdminConsole() {
 
       <Reports />
 
-      <Requests parties={parties ?? []} profiles={profiles ?? []} onChanged={reload} />
+      <Requests
+        parties={parties ?? []}
+        profiles={profiles ?? []}
+        blocks={blocks}
+        onChanged={reload}
+      />
 
       <Parties
         parties={parties}

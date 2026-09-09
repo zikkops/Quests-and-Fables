@@ -1066,10 +1066,9 @@ against Firestore until the day the keys land**, and expect the first hour after
 that to be about rules and indexes rather than about features.
 
 **What is genuinely not built**: `/parties/new` for a group of friends who want
-to skip the matching, blocking, and attendance. `/safety` makes four promises
-and three are now kept: reporting, removal, and Session Zero are built, and
-**blocking is not**. That is the remaining promise-shaped gap. See
-`Scope v1.md`.
+to skip the matching, and attendance. `/safety` makes four promises and **all
+four are now kept**: reporting, removal, Session Zero and blocking are built.
+See `Scope v1.md`.
 
 Two of those landed together and are worth reading as a pair, because they are
 the same argument pointed in opposite directions.
@@ -1098,9 +1097,35 @@ dated rather than ticked, and `changedAt` moves whenever an answer does, so a
 signature older than the last edit shows as stale instead of standing under
 wording nobody else has read.
 
+**Blocking** is the fourth, and the whole of it is that it cannot be discovered.
+`firestore.rules` refuses the blocked person the read, and nothing in the
+product ever says a table was withheld or why. A block somebody can find out
+about is a block with a cost attached to making it, and the people who most
+need one are exactly the people least able to pay that cost. If a future change
+makes blocks visible "for transparency", it has removed the feature and left
+the button.
+
+Only half of it can be enforced in a browser, and the split is deliberate. A
+player can be kept away from tables holding people **they** blocked, because
+those blocks are theirs to read. They cannot be kept away from a table holding
+somebody who blocked **them**, because reading that would be finding out. So
+that direction is enforced where it can be: in the admin console, which holds
+every block and refuses to seat the pair. The message an admin sees names
+nobody, since saying which way round it went would hand one player the fact
+that the other blocked them.
+
+It is also about the future rather than tonight. Blocking removes nobody from a
+party either of you is already at, and the copy says so instead of letting
+somebody believe they have dealt with this evening. This evening is a report,
+or a word with the game master, who can remove somebody outright.
+
+`test/rules.mjs` covers it at 98 assertions, and the one worth keeping green
+above the others is *the person blocked can never find out*.
+
 Blocked on Mark: **deploy the rules** (`firebase login` then `firebase deploy
 --only firestore:rules,firestore:indexes`, or paste `firestore.rules.min` into
-the console), **switch on the Email/Password sign-in method** in Auth, grant
+the console) — **blocking cannot work until this is done**, because rules that
+predate it have no `blocks` collection and the final deny catches every write, **switch on the Email/Password sign-in method** in Auth, grant
 yourself the admin claim
 (`node scripts/grant-admin.mjs you@example.com`, which needs a service account
 key kept outside this repo), **make `gm@questsandfables.com` exist**, since `/join` is the

@@ -151,3 +151,34 @@
   color: var(--ink-3);
   cursor: default;
 }
+
+/* A link that is a button, for a sentence that offers an action mid-flow. */
+.plainButton {
+  font: inherit;
+  font-size: inherit;
+  color: var(--accent);
+  background: none;
+  border: none;
+  border-bottom: 1px solid rgba(201, 162, 39, 0.35);
+  padding: 0;
+  cursor: pointer;
+}
+
+.plainButton:hover {
+  color: var(--accent-2);
+  border-bottom-color: var(--accent-2);
+}
+
+@media (pointer: coarse) {
+  .plainButton {
+    position: relative;
+  }
+
+  /* The target grows around the words rather than under them, so the sentence
+     it sits inside keeps its shape. */
+  .plainButton::after {
+    content: "";
+    position: absolute;
+    inset: -12px -6px;
+  }
+}
