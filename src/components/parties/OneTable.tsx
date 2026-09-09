@@ -17,6 +17,7 @@ import { fitFor, fits, keepApart, type Fit } from "@/lib/match";
 import { myBlocks, type Block } from "@/lib/firebase/block";
 import { limitLabel, type LimitKey } from "@/lib/firebase/schema";
 import GmStanding from "./GmStanding";
+import Founder from "./Founder";
 import styles from "./Parties.module.css";
 import one from "./OneTable.module.css";
 
@@ -167,7 +168,7 @@ export default function OneTable({ partyId }: { partyId: string }) {
     setBusy(true);
 
     try {
-      await askForSeat(user.uid, party.id, note);
+      await askForSeat(user.uid, party.id, note, profile?.username ?? "");
       setNote("");
       setRound((n) => n + 1);
     } catch (problem) {
@@ -257,6 +258,12 @@ export default function OneTable({ partyId }: { partyId: string }) {
             ))}
           </ul>
         </section>
+      ) : null}
+
+      {/* The founder's half comes first: on their own table the thing they came
+          to do is hand out the link and answer whoever followed it. */}
+      {profile && party.founderId === profile.uid ? (
+        <Founder party={party} onChanged={() => setRound((n) => n + 1)} />
       ) : null}
 
       {member ? (

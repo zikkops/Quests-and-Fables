@@ -410,10 +410,17 @@ console.log("\nSeat requests, and everything else");
 
 await check("a player asks for a seat, and only for themselves", async () => {
   await assertSucceeds(setDoc(doc(player("bob"), "seatRequests", "r1"), {
-    playerId: "bob", partyId: "p1", status: "waiting", note: "Free Thursdays.",
+    playerId: "bob", playerName: "bob", partyId: "p1", status: "waiting",
+    note: "Free Thursdays.",
   }));
   await assertFails(setDoc(doc(player("bob"), "seatRequests", "r2"), {
-    playerId: "carol", partyId: "p1", status: "waiting", note: "",
+    playerId: "carol", playerName: "carol", partyId: "p1", status: "waiting", note: "",
+  }));
+});
+
+await check("a request without a name is refused", async () => {
+  await assertFails(setDoc(doc(player("bob"), "seatRequests", "r_noname"), {
+    playerId: "bob", partyId: "p1", status: "waiting", note: "",
   }));
 });
 
@@ -833,6 +840,183 @@ await check("only the person who made it can lift it", async () => {
 await check("the final deny still denies", async () => {
   await assertFails(getDoc(doc(player("bob"), "anythingElse", "x")));
   await assertFails(setDoc(doc(admin("root"), "anythingElse", "x"), { a: 1 }));
+});
+
+/* ======================================================================== *
+   A group of friends founding their own table
+ * ======================================================================== */
+
+console.log("\nParties founded by players");
+
+const founded = (over = {}) => ({
+  name: "The Long Coast",
+  area: "achrafieh",
+  playerIds: ["bob"],
+  founderId: "bob",
+  gmId: null,
+  open: false,
+  status: "forming",
+  slot: null,
+  createdAt: Date.now(),
+  updatedAt: Date.now(),
+  ...over,
+});
+
+await check("a player founds a private table", async () => {
+  await seedProfile("bob");
+  await assertSucceeds(setDoc(doc(player("bob"), "parties", "p_new"), founded()));
+});
+
+await check("a founded party cannot start open", async () => {
+  await assertFails(
+    setDoc(doc(player("bob"), "parties", "p_open"), founded({ open: true })),
+  );
+});
+
+await check("a founder cannot hand themselves a game master", async () => {
+  await assertFails(
+    setDoc(doc(player("bob"), "parties", "p_gm"), founded({ gmId: "maret" })),
+  );
+});
+
+await check("a founder cannot start with anybody but themselves", async () => {
+  await assertFails(
+    setDoc(doc(player("bob"), "parties", "p_crowd"), founded({ playerIds: ["bob", "carol"] })),
+  );
+  await assertFails(
+    setDoc(doc(player("bob"), "parties", "p_other"), founded({ playerIds: ["carol"], founderId: "carol" })),
+  );
+});
+
+await check("a founded party cannot claim a hold on the pool", async () => {
+  await assertFails(
+    setDoc(doc(player("bob"), "parties", "p_playing"), founded({ status: "playing" })),
+  );
+});
+
+await check("an unverified account past its week cannot found one", async () => {
+  await seedProfile("stalefounder", { createdAt: Date.now() - 9 * DAY });
+  await assertFails(
+    setDoc(doc(unverified("stalefounder"), "parties", "p_stale"),
+      founded({ playerIds: ["stalefounder"], founderId: "stalefounder" })),
+  );
+});
+
+/* ---- taking a friend on ------------------------------------------------ */
+
+await check("a request must carry the asker's own username", async () => {
+  await seedProfile("carol");
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    await setDoc(doc(ctx.firestore(), "usernames", "carol"), { uid: "carol" });
+    await setDoc(doc(ctx.firestore(), "usernames", "dan"), { uid: "dan" });
+  });
+
+  await assertSucceeds(
+    setDoc(doc(player("carol"), "seatRequests", "carol_p_open2"), {
+      playerId: "carol",
+      playerName: "carol",
+      partyId: "p_open2",
+      note: "",
+      status: "waiting",
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    }),
+  );
+
+  /* Somebody else's name, so a founder reading it would see the wrong person. */
+  await assertFails(
+    setDoc(doc(player("carol"), "seatRequests", "carol_p_open3"), {
+      playerId: "carol",
+      playerName: "dan",
+      partyId: "p_open3",
+      note: "",
+      status: "waiting",
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    }),
+  );
+});
+
+await check("a founder takes on somebody who asked", async () => {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    await setDoc(doc(ctx.firestore(), "seatRequests", "carol_p_new"), {
+      playerId: "carol",
+      playerName: "carol",
+      partyId: "p_new",
+      note: "",
+      status: "waiting",
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    });
+  });
+
+  await assertSucceeds(
+    updateDoc(doc(player("bob"), "parties", "p_new"), {
+      playerIds: ["bob", "carol"],
+      updatedAt: Date.now(),
+    }),
+  );
+});
+
+await check("a founder cannot add somebody who never asked", async () => {
+  await assertFails(
+    updateDoc(doc(player("bob"), "parties", "p_new"), {
+      playerIds: ["bob", "carol", "dan"],
+      updatedAt: Date.now(),
+    }),
+  );
+});
+
+await check("nobody but the founder adds to a founded party", async () => {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    await setDoc(doc(ctx.firestore(), "seatRequests", "erin_p_new"), {
+      playerId: "erin",
+      playerName: "erin",
+      partyId: "p_new",
+      note: "",
+      status: "waiting",
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    });
+  });
+
+  await assertFails(
+    updateDoc(doc(player("erin"), "parties", "p_new"), {
+      playerIds: ["bob", "carol", "erin"],
+      updatedAt: Date.now(),
+    }),
+  );
+});
+
+await check("a founder cannot rename the party while adding", async () => {
+  await assertFails(
+    updateDoc(doc(player("bob"), "parties", "p_new"), {
+      playerIds: ["bob", "carol", "erin"],
+      name: "Something Else",
+      updatedAt: Date.now(),
+    }),
+  );
+});
+
+await check("a founder cannot open their party into the pool", async () => {
+  await assertFails(
+    updateDoc(doc(player("bob"), "parties", "p_new"), { open: true, updatedAt: Date.now() }),
+  );
+});
+
+await check("a founder cannot appoint a game master", async () => {
+  await assertFails(
+    updateDoc(doc(player("bob"), "parties", "p_new"), { gmId: "maret", updatedAt: Date.now() }),
+  );
+});
+
+await check("a founder cannot drop somebody on the way in", async () => {
+  await assertFails(
+    updateDoc(doc(player("bob"), "parties", "p_new"), {
+      playerIds: ["bob", "erin"],
+      updatedAt: Date.now(),
+    }),
+  );
 });
 
 /* ======================================================================== */

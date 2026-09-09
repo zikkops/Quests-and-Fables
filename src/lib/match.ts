@@ -428,6 +428,7 @@ export function fitFor(player: Profile, party: Party, apart?: Set<string>): Fit 
  */
 export const openTo = (player: Profile, parties: Party[], apart?: Set<string>) =>
   parties
+    .filter(inThePool)
     .map((party) => ({ party, fit: fitFor(player, party, apart) }))
     .filter((one) => fits(one.fit))
     .sort((a, b) => b.fit.score - a.fit.score);
@@ -440,9 +441,17 @@ export const openTo = (player: Profile, parties: Party[], apart?: Set<string>) =
  * stranger: where a table meets, when, and how many seats are left. Never who
  * is at it.
  */
+/** Parties a stranger may be shown or matched to. Never a private one. */
+export const inThePool = (party: Party) => party.open !== false;
+
 export const publicView = (parties: Party[]) =>
   parties
-    .filter((party) => party.status !== "closed" && party.playerIds.length < PARTY_MAX)
+    .filter(
+      (party) =>
+        inThePool(party)
+        && party.status !== "closed"
+        && party.playerIds.length < PARTY_MAX,
+    )
     .sort((a, b) => b.createdAt - a.createdAt);
 
 /** Free seats across everything open. The honest headline number. */

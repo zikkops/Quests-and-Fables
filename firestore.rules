@@ -324,14 +324,74 @@ service cloud.firestore {
       */
       allow read: if true;
 
+      function namedSanely() {
+        return request.resource.data.name is string
+               && request.resource.data.name.size() > 0
+               && request.resource.data.name.size() <= 60
+               && request.resource.data.area is string;
+      }
+
       allow create: if isAdmin()
                     && request.resource.data.playerIds is list
                     && request.resource.data.playerIds.size() <= 6
-                    && request.resource.data.name is string
-                    && request.resource.data.name.size() > 0
-                    && request.resource.data.name.size() <= 60
-                    && request.resource.data.area is string
+                    && namedSanely()
                     && request.resource.data.status in ['forming', 'assigned', 'playing', 'closed'];
+
+      /*
+        A group of friends founding their own table.
+
+        Everything a player may not do is spelled out rather than assumed: they
+        start alone, they are the founder, there is no game master, and the
+        party is private. `open == false` is the load-bearing one. An open party
+        enters matching and is offered to strangers, and a party a player could
+        open would be a party a player could use to reach strangers on our
+        recommendation. Game masters stay out of a player's hands for the
+        reason /join gives: they are recruited and met in person.
+      */
+      allow create: if signedIn()
+                    && inGoodStanding(request.auth.uid)
+                    && namedSanely()
+                    && request.resource.data.founderId == request.auth.uid
+                    && request.resource.data.playerIds == [request.auth.uid]
+                    && request.resource.data.gmId == null
+                    && request.resource.data.open == false
+                    && request.resource.data.status == 'forming'
+                    && request.resource.data.slot == null;
+
+      /*
+        A founder taking on a friend who asked.
+
+        The link to a private party is an invitation, not an authorisation:
+        anybody holding it may ask, and only the founder may say yes. That is
+        why this rule proves the ask happened rather than trusting the founder
+        to have a reason — a founder who could add any uid could put somebody
+        at a table without their consent, and a seat at a table is a room with
+        strangers in it.
+
+        The request id is the pair, which is the only reason a rule can find it
+        at all: get() on a known id is the only lookup rules have.
+      */
+      function askedFor(uid) {
+        return get(
+                 /databases/$(database)/documents/seatRequests/$(uid + '_' + partyId)
+               ).data.status == 'waiting';
+      }
+
+      allow update: if signedIn()
+                    && resource.data.get('founderId', '') == request.auth.uid
+                    && resource.data.get('open', true) == false
+                    // Only the roster moves, and only by one, and only towards
+                    // somebody who asked.
+                    && request.resource.data.diff(resource.data)
+                         .affectedKeys().hasOnly(['playerIds', 'updatedAt'])
+                    && request.resource.data.playerIds.size()
+                       == resource.data.playerIds.size() + 1
+                    && request.resource.data.playerIds.size() <= 6
+                    // Nobody already there is dropped on the way in.
+                    && request.resource.data.playerIds.hasAll(resource.data.playerIds)
+                    && askedFor(
+                         request.resource.data.playerIds
+                           .removeAll(resource.data.playerIds)[0]);
 
       /*
         A game master removing one player from their own party, and nothing
@@ -584,6 +644,14 @@ service cloud.firestore {
       allow create: if signedIn()
                     && inGoodStanding(request.auth.uid)
                     && request.resource.data.playerId == request.auth.uid
+                    // The name on the request has to be the name that lock says
+                    // belongs to this uid. A founder decides who joins their
+                    // table from this field, so a client that could put any
+                    // string in it could put a friend's name on a stranger.
+                    && request.resource.data.playerName is string
+                    && get(
+                         /databases/$(database)/documents/usernames/$(request.resource.data.playerName)
+                       ).data.uid == request.auth.uid
                     && request.resource.data.partyId is string
                     && request.resource.data.status == 'waiting'
                     && request.resource.data.note is string

@@ -39,6 +39,30 @@ export type Party = {
   playerIds: string[];
   /** Set when a game master is assigned. Null while forming. */
   gmId: string | null;
+
+  /**
+   * The player who made it, or null when the console did.
+   *
+   * A founder is not an admin and gets exactly two powers over their own
+   * party: they may accept somebody who has asked for a seat, and they may
+   * rename it. They cannot assign a game master — those are recruited and met
+   * in person — and they cannot put the party into matching.
+   */
+  founderId?: string | null;
+
+  /**
+   * Whether this party is in the pool.
+   *
+   * Admin-made parties are open: they appear on `/parties`, they are ranked
+   * against a player's week, and strangers may ask for a seat. A party a group
+   * of friends made for themselves is not, and that is the entire point of
+   * letting them make one. It never appears in a list, never enters matching,
+   * and the only way in is a link from somebody already at it.
+   *
+   * Optional because parties written before this existed are all admin-made
+   * and all open; absent reads as open.
+   */
+  open?: boolean;
   /**
    * The block they settled on, as a day index and a block index. Null until
    * somebody picks one out of the overlap.

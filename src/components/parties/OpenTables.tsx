@@ -176,6 +176,14 @@ export default function OpenTables({ area }: Props) {
 
       {error ? <p className={styles.error}>{error}</p> : null}
 
+      <p className={styles.already}>
+        Already have a group?{" "}
+        <Link href="/parties/new" className={styles.inlineLink}>
+          Start your own table
+        </Link>{" "}
+        and skip the matching. You still get a game master.
+      </p>
+
       {shown.length === 0 ? (
         <div className={styles.empty}>
           <h2 className={styles.emptyTitle}>
@@ -186,9 +194,14 @@ export default function OpenTables({ area }: Props) {
             overlap, which is slower than a listings board and is the reason they
             hold together. Set your availability and you are in the pool.
           </p>
-          <Link href={user ? "/account" : "/sign-in"} className={styles.primary}>
-            {user ? "Set your availability" : "Join the pool"}
-          </Link>
+          <div className={styles.tableActions}>
+            <Link href={user ? "/account" : "/sign-in"} className={styles.primary}>
+              {user ? "Set your availability" : "Join the pool"}
+            </Link>
+            <Link href="/parties/new" className={styles.secondary}>
+              Or start your own table
+            </Link>
+          </div>
         </div>
       ) : (
         <ul className={styles.list}>

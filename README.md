@@ -199,7 +199,8 @@ Three places where this deviates from the vault notes, deliberately:
 | `/character-builder` | **Built.** SRD builder, engine ported from the vault prototype |
 | `/character-builder/custom` | **Built.** The blank sheet |
 | `/parties` | **Built.** Open tables, ranked by fit for whoever is signed in, filtered by the hard rules in `src/lib/match.ts`. Still **dynamic**: it reads `?area=` from the homepage picker and answers it with the map |
-| `/parties/[id]` | **Built.** One table: where, when, and what it will not play through. Ask for a seat, or withdraw |
+| `/parties/[id]` | **Built.** One table: where, when, and what it will not play through. Ask for a seat, or withdraw. A founder also gets the share link and the people asking to join |
+| `/parties/new` | **Built.** A group of friends starting their own table, private and outside matching |
 | `/campaign/[id]` | **Built.** A real party's table: the sheets everybody brought and the live notebook. Members only, enforced in the rules |
 | `/gm` | **Built.** The tables a game master runs. Anyone else gets told game masters are recruited, not signed up. Linked from `/account`, and only for somebody an admin has marked |
 | `/campaign` | The demo, hosting two **working** things on made up data: the tracker and the notebook. The real one is `/campaign/[id]` |
@@ -488,6 +489,42 @@ again is how you update it, and that is a deliberate act rather than a sync.
 `Tracker` takes its characters as a prop now, so the same component runs on four
 made up adventurers at `/campaign` and on a real party's nominated sheets at
 `/campaign/[id]`. Neither copy knows which it is.
+
+## A table a group of friends made
+
+`/parties/new` is the shortcut around matching, and it says so rather than
+pretending to be the same thing. Four people who already chose each other do not
+need to be scored against one another.
+
+**A founded party is private, and that is the whole feature.** `open: false`
+keeps it out of `publicView` and `openTo`, so it is never listed and no
+stranger is ever matched into it. The rules refuse to let a player create an
+open one or flip an existing one open, because a party a player could open is a
+party a player could use to reach strangers on our recommendation.
+
+**The link is an invitation, not an authorisation.** Anybody holding it may ask;
+only the founder may say yes. That distinction is enforced rather than assumed:
+the update rule proves a seat request exists before it will add anybody, because
+a founder who could add any uid could seat somebody at a table with strangers
+without their consent.
+
+Making that provable is why **seat request ids are now the pair**,
+`{playerId}_{partyId}`, rather than random. `get()` on a known id is the only
+lookup rules have — there is no querying from a rule. It also fixed a real bug
+on the way past: asking the same table twice used to make two requests, and now
+it is the same one.
+
+**A founder cannot appoint a game master**, and the rule says so in as many
+words. That is `/join`'s promise: game masters are recruited and met in person,
+and a table full of somebody's friends is exactly where it would be most
+tempting to skip that.
+
+**Requests carry the asker's username, and the rules check it against the lock.**
+Found by looking at the finished screen: a founder cannot read another player's
+profile — nobody can — so the list said "somebody asked to join" three times over
+and the founder had to guess which friend was which. The username is the one
+public field a player has, and `get(/usernames/$(name)).data.uid` proves it is
+theirs, so a client cannot put a friend's name on a stranger's request.
 
 ## The notebook
 
@@ -1065,8 +1102,7 @@ database, because there is not one yet. **Treat every line of it as untested
 against Firestore until the day the keys land**, and expect the first hour after
 that to be about rules and indexes rather than about features.
 
-**What is genuinely not built**: `/parties/new` for a group of friends who want
-to skip the matching, and attendance. `/safety` makes four promises and **all
+**What is genuinely not built**: attendance. `/safety` makes four promises and **all
 four are now kept**: reporting, removal, Session Zero and blocking are built.
 See `Scope v1.md`.
 

@@ -194,6 +194,16 @@ export const SEAT_REQUESTS = "seatRequests";
 export type SeatRequest = {
   id: string;
   playerId: string;
+  /**
+   * The asker's username, copied in.
+   *
+   * Not decoration and not a shortcut. A founder cannot read another player's
+   * profile — nobody can — so without this the person deciding sees "somebody
+   * asked to join" three times over and has to guess which friend is which.
+   * The username is the one field of a player's that is public, and the rules
+   * check it against `usernames/` rather than taking the client's word.
+   */
+  playerName?: string;
   partyId: string;
   /** Anything the player wants the game master to know. Optional, capped. */
   note: string;
@@ -202,14 +212,30 @@ export type SeatRequest = {
   updatedAt: number;
 };
 
+/**
+ * The id of a request, which is the pair rather than a random string.
+ *
+ * Two reasons, and the second is the important one. Asking twice is now the
+ * same request rather than two, which it always should have been. And a rule
+ * can find a request without being able to query: the founder-accepts-a-friend
+ * rule has to prove somebody asked before it lets them be added, and `get()`
+ * on a known id is the only lookup rules have.
+ */
+export const seatRequestId = (playerId: string, partyId: string) =>
+  `${playerId}_${partyId}`;
+
 export async function askForSeat(
   playerId: string,
   partyId: string,
   note: string,
+  playerName: string,
 ): Promise<string> {
   const now = Date.now();
-  const entry = await addDoc(collection(database(), SEAT_REQUESTS), {
+  const id = seatRequestId(playerId, partyId);
+
+  await setDoc(doc(database(), SEAT_REQUESTS, id), {
     playerId,
+    playerName,
     partyId,
     note: note.trim().slice(0, 500),
     status: "waiting" as const,
@@ -217,7 +243,79 @@ export async function askForSeat(
     updatedAt: now,
   });
 
+  return id;
+}
+
+/* ==========================================================================
+   A party a group of friends made for themselves
+   ========================================================================== */
+
+/**
+ * Found a party, as a player rather than as the console.
+ *
+ * It starts private and stays private: never listed, never matched, no
+ * strangers. The founder is its only member and there is no game master,
+ * because game masters are recruited and met in person. What this gets you is
+ * a table with a name that an admin can hand a game master to.
+ *
+ * No `profile` aggregate is written. A private party is never matched against,
+ * so there is nothing to aggregate for — and the founder could not compute one
+ * anyway, since it needs every member's week and those are private.
+ */
+export async function foundParty(input: {
+  founderId: string;
+  name: string;
+  area: string;
+}): Promise<string> {
+  const now = Date.now();
+  const entry = await addDoc(collection(database(), PARTY_PATH), {
+    name: input.name.trim().slice(0, 60),
+    area: input.area,
+    playerIds: [input.founderId],
+    founderId: input.founderId,
+    gmId: null,
+    open: false,
+    status: "forming" satisfies PartyStatus,
+    slot: null,
+    createdAt: now,
+    updatedAt: now,
+  });
+
   return entry.id;
+}
+
+/** Every request waiting on one party. What a founder sees on their own table. */
+export async function requestsFor(partyId: string): Promise<SeatRequest[]> {
+  const snapshot = await withTimeout(
+    getDocs(
+      query(
+        collection(database(), SEAT_REQUESTS),
+        where("partyId", "==", partyId),
+        where("status", "==", "waiting"),
+      ),
+    ),
+  );
+
+  return snapshot.docs
+    .map((entry) => ({ id: entry.id, ...entry.data() }) as SeatRequest)
+    .sort((a, b) => a.createdAt - b.createdAt);
+}
+
+/**
+ * A founder taking a friend on. Two writes that have to agree: the party gains
+ * the player and the request is marked joined.
+ */
+export async function acceptFriend(
+  party: { id: string; playerIds: string[] },
+  playerId: string,
+): Promise<void> {
+  if (party.playerIds.includes(playerId)) return;
+  if (party.playerIds.length >= PARTY_MAX) {
+    throw new Error(`Six is the most a table takes.`);
+  }
+
+  await updateParty(party.id, { playerIds: [...party.playerIds, playerId] });
+  await answerRequest(seatRequestId(playerId, party.id), "joined");
 }
 
 /** Everything one player has asked for. The only query they are allowed. */
