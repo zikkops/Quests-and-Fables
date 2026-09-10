@@ -240,8 +240,12 @@ async function main() {
     updatedAt: now,
   });
 
-  for (const uid of seated) await put(`parties/${partyId}/members/${uid}`, { role: "player" });
-  await put(`parties/${partyId}/members/${gm}`, { role: "gm" });
+  /* Named, the way the real paths now write them: the member document is the
+     one place the rest of the table can read a username. */
+  for (const [i, uid] of seated.entries()) {
+    await put(`parties/${partyId}/members/${uid}`, { role: "player", name: PLAYERS[i].username });
+  }
+  await put(`parties/${partyId}/members/${gm}`, { role: "gm", name: "bassam_gm" });
   await put(`parties/${partyId}/secrets/chat`, { url: "https://chat.whatsapp.com/seeded-example" });
 
   await put(`parties/${partyId}/sessions/night-one`, {

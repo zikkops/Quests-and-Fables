@@ -9,6 +9,7 @@ import {
   markPlaying,
   takeSheetBack,
   type TableSheet,
+  listMembers,
 } from "@/lib/firebase/party";
 import {
   addNote,
@@ -34,7 +35,9 @@ import type { PlaySession, SessionNote } from "@/lib/notebook";
 import Tracker from "../Tracker";
 import Notebook, { type Draft } from "../notebook/Notebook";
 import ReportDialog from "./ReportDialog";
+import Attendance from "./Attendance";
 import BlockDialog from "./BlockDialog";
+import { byPlayed, type WithAttendance } from "@/lib/attendance";
 import RateGameMaster from "./RateGameMaster";
 import Roster from "./Roster";
 import SessionZeroCard from "./SessionZeroCard";
@@ -65,6 +68,8 @@ export default function Campaign({ partyId }: { partyId: string }) {
   /** Who somebody is about to block, and what they know them as. */
   const [blocking, setBlocking] = useState<{ uid: string; name: string } | null>(null);
   const [sessions, setSessions] = useState<PlaySession[]>([]);
+  /** Everybody seated here, by name. The only place the table learns usernames. */
+  const [members, setMembers] = useState<{ uid: string; name: string; role: string }[]>([]);
   const [notes, setNotes] = useState<SessionNote[]>([]);
   const [gmNotes, setGmNotes] = useState<SessionNote[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -98,6 +103,27 @@ export default function Campaign({ partyId }: { partyId: string }) {
     if (party.playerIds.includes(profile.uid)) return "player" as const;
     return null;
   }, [profile, party]);
+
+  /*
+    Names for the register. A profile is readable by its owner alone, so the
+    member document carries the one thing the rest of the table needs from it.
+  */
+  useEffect(() => {
+    if (!role) return;
+
+    let alive = true;
+    listMembers(partyId)
+      .then((found) => {
+        if (alive) setMembers(found);
+      })
+      .catch(() => {
+        if (alive) setMembers([]);
+      });
+
+    return () => {
+      alive = false;
+    };
+  }, [role, partyId, round]);
 
   useEffect(() => {
     if (!role || !user) return;
@@ -471,6 +497,22 @@ export default function Campaign({ partyId }: { partyId: string }) {
             </>
           )}
         </section>
+      ) : null}
+
+      {sessions.length > 0 ? (
+        <Attendance
+          partyId={partyId}
+          /* Tonight if a night is open, otherwise the last one played. */
+          session={(openSession ?? [...sessions].sort(byPlayed)[0]) as WithAttendance}
+          /* Players still at the table. Somebody removed keeps their history
+             in the map, and is simply no longer somebody to mark. */
+          names={members
+            .filter((one) => one.role === "player" && party.playerIds.includes(one.uid))
+            .map(({ uid, name }) => ({ uid, name }))}
+          canMark={role === "gm"}
+          sessions={sessions as WithAttendance[]}
+          onChanged={reload}
+        />
       ) : null}
 
       <section className={styles.block}>

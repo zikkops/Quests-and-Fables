@@ -1073,6 +1073,45 @@ of who said what is a list of who said what. Four players can still infer a
 good deal from a tally that moves, which is the honest limit of this and the
 other reason the floor of three exists.
 
+## Seating: the member document is the key
+
+`playerIds` on a party is its public roster. `parties/{id}/members/{uid}` is
+the key to it: `memberRole()` in `firestore.rules` reads that document, not the
+list, and it gates the notebook, the sheets, the sessions, Session Zero, the
+rating, attendance and removal. **Every path that puts somebody at a table has
+to write both**, through `seatMember` in `src/lib/firebase/party.ts`.
+
+For a long time only one path did. The admin console built parties, approved
+seat requests and assigned game masters by writing `playerIds` alone, and
+founding a table did the same, so every real party had a campaign page that
+refused everybody at it, game master included. It never showed locally because
+`scripts/seed-emulator.mjs` writes member documents by hand. If a campaign page
+ever says a player at the table is not allowed to read it, check this first.
+
+A member document also carries the person's username, because a profile is
+readable by its owner alone and this is the one place the rest of a table can
+learn what to call each other. A founder may create them for their own roster
+only, as players only, and only under the name the usernames lock says belongs
+to that uid.
+
+## Attendance
+
+The game master marks each night **came**, **told us**, or **no show**, and the
+middle one is the point: somebody who warned the table on Tuesday that they
+could not make Thursday has done the right thing, and counting that as a miss
+punishes exactly the behaviour worth encouraging. The table reads each night
+because they were in the room. Only an admin sees a pattern across nights, and
+**there is no reliability figure on a profile and attendance never feeds
+matching on its own**: a number on somebody that silently drops them out of the
+pool is a number they can never learn about or argue with. `slipping` in
+`src/lib/attendance.ts` is a prompt for a person, never a verdict.
+
+The rule only checks the marks a write actually changes, not the whole map.
+Checking the whole map looked equivalent and was not: once a game master
+removed somebody already marked, every later write to that night was refused,
+closing it included, because the old mark was still there. History stands;
+anything new has to be somebody at the table.
+
 ## Copy style
 
 Beyond rule 15: no exclamation marks, no "revolutionary" or "seamless", no
@@ -1102,9 +1141,10 @@ database, because there is not one yet. **Treat every line of it as untested
 against Firestore until the day the keys land**, and expect the first hour after
 that to be about rules and indexes rather than about features.
 
-**What is genuinely not built**: attendance. `/safety` makes four promises and **all
-four are now kept**: reporting, removal, Session Zero and blocking are built.
-See `Scope v1.md`.
+**Everything on the v1 list is now built**, attendance last. `/safety` makes
+four promises and **all four are kept**: reporting, removal, Session Zero and
+blocking. What remains is decisions and deploys rather than code, listed under
+"Blocked on Mark" below. See `Scope v1.md`.
 
 Two of those landed together and are worth reading as a pair, because they are
 the same argument pointed in opposite directions.

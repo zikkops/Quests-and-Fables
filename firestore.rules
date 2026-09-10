@@ -36,7 +36,7 @@ rules_version = '2';
      without the first the counter never rises, without the second it can be
      wound back to zero for free and the limit means nothing.
 
-  **Every rule in this file is tested.** `npm run test:rules` runs 92 cases
+  **Every rule in this file is tested.** `npm run test:rules` runs 126 cases
   against the emulator. Each one is what somebody with the SDK and a text
   editor can do, rather than what the app happens to do, because the app being
   well behaved is not evidence. Run it before deploying: a rules mistake does
@@ -467,6 +467,33 @@ service cloud.firestore {
         allow write: if isAdmin();
 
         /*
+          A founder seating somebody on their own roster, as a player.
+
+          Founding a table and accepting a friend only ever wrote `playerIds`,
+          and `memberRole()` reads this document rather than that list, so a
+          founded table's own campaign page refused everybody at it, the founder
+          included. This is the write that was missing.
+
+          Tied to the roster, so it cannot hand a stranger the notebook: the
+          roster only grows through a request that person made themselves. Role
+          is 'player' and only 'player', so a founder cannot make themselves the
+          game master by the back door. And the name has to be the one the
+          usernames lock says belongs to this uid, because the whole table reads
+          it and a founder could otherwise label anybody anything.
+        */
+        allow create: if signedIn()
+                      && get(/databases/$(database)/documents/parties/$(partyId))
+                           .data.get('founderId', '') == request.auth.uid
+                      && uid in get(/databases/$(database)/documents/parties/$(partyId))
+                           .data.playerIds
+                      && request.resource.data.keys().hasOnly(['role', 'name'])
+                      && request.resource.data.role == 'player'
+                      && request.resource.data.name is string
+                      && get(
+                           /databases/$(database)/documents/usernames/$(request.resource.data.name)
+                         ).data.uid == uid;
+
+        /*
           This document is what `memberRole()` reads, so deleting it is what
           actually ends somebody's access to the table: the notebook, the
           sheets, the group chat link, all of it. It is the first write the
@@ -582,12 +609,47 @@ service cloud.firestore {
       match /sessions/{sessionId} {
         allow read: if memberRole() in ['player', 'gm'];
 
+        /*
+          Attendance, which only the game master writes.
+
+          Two things are checked rather than trusted. The marks have to be one
+          of the three, so a client cannot invent a fourth and have it counted
+          as something later. And every name in the map has to be somebody
+          actually at this table, because a record that can hold strangers is a
+          record that can be pointed at a person who was never there.
+
+          It is optional: a night nobody filled in is a night nobody filled in,
+          and `attendanceOf` in src/lib/attendance.ts leaves those out of the
+          denominator rather than counting them as absences.
+        */
+        /*
+          Only the marks this write actually changes have to belong to somebody
+          still at the table, not every mark in the map.
+
+          Checking the whole map looked equivalent and was not. The map is
+          history: once a game master removes somebody who had already been
+          marked, their old entry is still in it, so every later write to that
+          night failed, closing the night included, and the game master was
+          locked out of their own register by a mark that was true when it was
+          made. Untouched history stands. Anything new has to be a person here.
+        */
+        function attendanceSane() {
+          return request.resource.data.get('attendance', {}).values()
+                   .hasOnly(['came', 'missed', 'excused'])
+                 && request.resource.data.get('attendance', {})
+                      .diff(resource == null ? {} : resource.data.get('attendance', {}))
+                      .affectedKeys()
+                      .hasOnly(get(/databases/$(database)/documents/parties/$(partyId))
+                                 .data.playerIds);
+        }
+
         // A session is opened and closed by the game master running it.
         allow create, update: if memberRole() == 'gm'
                               && request.resource.data.number is int
                               && request.resource.data.title is string
                               && request.resource.data.title.size() <= 80
-                              && request.resource.data.open is bool;
+                              && request.resource.data.open is bool
+                              && attendanceSane();
 
         allow delete: if false;
 

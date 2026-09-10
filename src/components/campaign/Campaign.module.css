@@ -182,3 +182,118 @@
     inset: -12px -6px;
   }
 }
+
+/* ---- the register -------------------------------------------------------- */
+
+.register {
+  display: grid;
+  gap: 12px;
+  padding: 18px 20px 20px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+}
+
+.registerHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.registerList {
+  display: grid;
+  gap: 2px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.registerRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.registerWho {
+  display: grid;
+  gap: 2px;
+}
+
+.registerName {
+  font-family: var(--font-display);
+  font-size: 14.5px;
+  color: var(--ink);
+}
+
+/* The quiet record. Deliberately counts nights attended rather than showing a
+   percentage: a score is a verdict and this is a fact. */
+.registerRecord {
+  font-size: 11.5px;
+  color: var(--ink-3);
+}
+
+.marks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.mark {
+  font: inherit;
+  font-size: 11.5px;
+  letter-spacing: 0.06em;
+  color: var(--ink-3);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 4px 12px;
+  cursor: pointer;
+  transition:
+    border-color 140ms var(--ease-out),
+    color 140ms var(--ease-out),
+    background 140ms var(--ease-out);
+}
+
+.mark:hover:not(:disabled) {
+  color: var(--ink-2);
+  border-color: var(--line-2);
+}
+
+.mark:disabled {
+  cursor: default;
+}
+
+.markOn[data-mark="came"] {
+  color: var(--ok);
+  border-color: color-mix(in srgb, var(--ok) 55%, transparent);
+  background: color-mix(in srgb, var(--ok) 12%, transparent);
+}
+
+.markOn[data-mark="excused"] {
+  color: var(--warn);
+  border-color: color-mix(in srgb, var(--warn) 55%, transparent);
+  background: color-mix(in srgb, var(--warn) 12%, transparent);
+}
+
+.markOn[data-mark="missed"] {
+  color: var(--err);
+  border-color: color-mix(in srgb, var(--err) 55%, transparent);
+  background: color-mix(in srgb, var(--err) 12%, transparent);
+}
+
+.markRead {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.markRead[data-mark="came"] { color: var(--ok); }
+.markRead[data-mark="excused"] { color: var(--warn); }
+.markRead[data-mark="missed"] { color: var(--err); }

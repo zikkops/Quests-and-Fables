@@ -264,6 +264,8 @@ export async function askForSeat(
  */
 export async function foundParty(input: {
   founderId: string;
+  /** The founder's username, which becomes their name at the table. */
+  founderName: string;
   name: string;
   area: string;
 }): Promise<string> {
@@ -279,6 +281,19 @@ export async function foundParty(input: {
     slot: null,
     createdAt: now,
     updatedAt: now,
+  });
+
+  /*
+    And the member document, which is not optional.
+
+    `memberRole()` in firestore.rules reads parties/{id}/members/{uid}, and it
+    is what gates the notebook, the sheets and the sessions. A party with a
+    roster but no member documents is a party whose own campaign page refuses
+    everybody, founder included.
+  */
+  await setDoc(doc(database(), PARTY_PATH, entry.id, "members", input.founderId), {
+    role: "player",
+    name: input.founderName,
   });
 
   return entry.id;
@@ -308,6 +323,7 @@ export async function requestsFor(partyId: string): Promise<SeatRequest[]> {
 export async function acceptFriend(
   party: { id: string; playerIds: string[] },
   playerId: string,
+  playerName: string,
 ): Promise<void> {
   if (party.playerIds.includes(playerId)) return;
   if (party.playerIds.length >= PARTY_MAX) {
@@ -315,6 +331,14 @@ export async function acceptFriend(
   }
 
   await updateParty(party.id, { playerIds: [...party.playerIds, playerId] });
+
+  /* Seated, then named. The roster write is the one the rules guard; this is
+     what lets the rest of the table read anything. */
+  await setDoc(doc(database(), PARTY_PATH, party.id, "members", playerId), {
+    role: "player",
+    name: playerName,
+  });
+
   await answerRequest(seatRequestId(playerId, party.id), "joined");
 }
 
@@ -480,3 +504,49 @@ export const markPlaying = (partyId: string) =>
     status: "playing" satisfies PartyStatus,
     updatedAt: Date.now(),
   });
+
+/**
+ * Who is at a table, by name.
+ *
+ * The only place the rest of a party can learn each other's usernames: a
+ * profile is readable by its owner alone, so the member document carries the
+ * name it needs to be useful. Nothing else of theirs is in it.
+ */
+export async function listMembers(
+  partyId: string,
+): Promise<{ uid: string; name: string; role: string }[]> {
+  const snapshot = await withTimeout(
+    getDocs(collection(database(), PARTY_PATH, partyId, "members")),
+  );
+
+  return snapshot.docs.map((entry) => ({
+    uid: entry.id,
+    name: (entry.data().name as string) ?? entry.id,
+    role: (entry.data().role as string) ?? "player",
+  }));
+}
+
+/* ==========================================================================
+   Seating
+
+   The member document is what `memberRole()` in firestore.rules reads, and it
+   gates the notebook, the sheets, the sessions, Session Zero, the rating and
+   removal. `playerIds` on the party is the public roster; this is the key.
+   Every path that puts somebody at a table has to write both, and for a long
+   time the admin console wrote only the first: a party it assembled had a
+   campaign page that refused everybody at it. The seed script hid that by
+   writing member documents by hand.
+   ========================================================================== */
+
+export type Seat = { uid: string; role: "player" | "gm"; name: string };
+
+/** Give somebody the key to a table. Admin only, except a founder's roster. */
+export const seatMember = (partyId: string, seat: Seat) =>
+  setDoc(doc(database(), PARTY_PATH, partyId, "members", seat.uid), {
+    role: seat.role,
+    name: seat.name,
+  });
+
+/** Take it back. Absent is fine: somebody may never have been seated. */
+export const unseatMember = (partyId: string, uid: string) =>
+  deleteDoc(doc(database(), PARTY_PATH, partyId, "members", uid)).catch(() => {});

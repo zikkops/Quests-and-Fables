@@ -93,6 +93,7 @@ export default function FoundParty() {
     try {
       const id = await foundParty({
         founderId: profile.uid,
+        founderName: profile.username,
         name: name.trim(),
         area,
       });

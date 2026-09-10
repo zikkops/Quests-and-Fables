@@ -66,7 +66,7 @@ export default function Founder({ party, onChanged }: Props) {
     setBusy(request.id);
 
     try {
-      await acceptFriend(party, request.playerId);
+      await acceptFriend(party, request.playerId, request.playerName ?? request.playerId);
       setRound((n) => n + 1);
       onChanged();
     } catch (problem) {

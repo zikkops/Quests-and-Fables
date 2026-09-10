@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import {
   answerRequest,
+  seatMember,
   updateParty,
   waitingRequests,
   type SeatRequest,
@@ -95,6 +96,8 @@ export default function Requests({ parties, profiles, blocks, onChanged }: Props
       /* The party and the summary it is matched on move together, or the table
          starts advertising an evening its newest player cannot make. */
       await updateParty(party.id, { playerIds, profile: aggregate(members) });
+      /* Seated, not only listed: this is what opens the notebook to them. */
+      await seatMember(party.id, { uid: player.uid, role: "player", name: player.username });
       await answerRequest(request.id, "joined");
 
       reload();

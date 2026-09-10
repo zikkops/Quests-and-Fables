@@ -677,6 +677,72 @@ await check("a player cannot open a night", async () => {
   }));
 });
 
+/* ---- attendance -------------------------------------------------------- */
+
+await check("the game master marks who turned up", async () => {
+  await assertSucceeds(updateDoc(doc(player("gm1"), "parties/p1/sessions", "s2"), {
+    attendance: { bob: "came" },
+  }));
+});
+
+await check("all three marks are accepted", async () => {
+  await assertSucceeds(updateDoc(doc(player("gm1"), "parties/p1/sessions", "s2"), {
+    attendance: { bob: "excused" },
+  }));
+  await assertSucceeds(updateDoc(doc(player("gm1"), "parties/p1/sessions", "s2"), {
+    attendance: { bob: "missed" },
+  }));
+});
+
+await check("a fourth mark is not invented", async () => {
+  await assertFails(updateDoc(doc(player("gm1"), "parties/p1/sessions", "s2"), {
+    attendance: { bob: "late" },
+  }));
+});
+
+await check("nobody who is not at the table can be marked", async () => {
+  await assertFails(updateDoc(doc(player("gm1"), "parties/p1/sessions", "s2"), {
+    attendance: { mallory: "missed" },
+  }));
+});
+
+await check("a player cannot mark their own attendance", async () => {
+  await assertFails(updateDoc(doc(player("bob"), "parties/p1/sessions", "s2"), {
+    attendance: { bob: "came" },
+  }));
+});
+
+await check("the table can read who was there", async () => {
+  await assertSucceeds(getDoc(doc(player("bob"), "parties/p1/sessions", "s2")));
+});
+
+await check("nobody outside the table can", async () => {
+  await assertFails(getDoc(doc(player("mallory"), "parties/p1/sessions", "s2")));
+  await assertFails(getDoc(doc(stranger(), "parties/p1/sessions", "s2")));
+});
+
+await check("a table that has lost somebody can still close the night", async () => {
+  /* carol was removed from p2 earlier in this file, after being marked here.
+     Her mark is history, and it must not lock the game master out of the rest
+     of their own register. Under the first version of the rule it did. */
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    await setDoc(doc(ctx.firestore(), "parties/p2/sessions", "n1"), {
+      campaignId: "p2", number: 1, title: "Before", playedOn: Date.now(), open: true,
+      attendance: { bob: "came", carol: "came" },
+    });
+  });
+  await assertSucceeds(updateDoc(doc(player("gm2"), "parties/p2/sessions", "n1"), { open: false }));
+  await assertSucceeds(updateDoc(doc(player("gm2"), "parties/p2/sessions", "n1"), {
+    attendance: { bob: "came", carol: "came", dan: "excused" },
+  }));
+});
+
+await check("but nobody new who is not at the table is written in", async () => {
+  await assertFails(updateDoc(doc(player("gm2"), "parties/p2/sessions", "n1"), {
+    attendance: { bob: "came", carol: "came", dan: "excused", mallory: "missed" },
+  }));
+});
+
 /* ========================================================================
    What a table says about the game master who ran it
    ======================================================================== */
@@ -1007,6 +1073,36 @@ await check("a founder cannot open their party into the pool", async () => {
 await check("a founder cannot appoint a game master", async () => {
   await assertFails(
     updateDoc(doc(player("bob"), "parties", "p_new"), { gmId: "maret", updatedAt: Date.now() }),
+  );
+});
+
+await check("a founder seats the people on the roster", async () => {
+  /* bob founded p_new and carol was accepted onto it above. */
+  await assertSucceeds(
+    setDoc(doc(player("bob"), "parties/p_new/members", "bob"), { role: "player", name: "bob" }),
+  );
+  await assertSucceeds(
+    setDoc(doc(player("bob"), "parties/p_new/members", "carol"), { role: "player", name: "carol" }),
+  );
+});
+
+await check("FIX: a founder cannot seat somebody who is not on the roster", async () => {
+  /* Without the roster tie this would hand mallory the party's notebook,
+     because memberRole() is what the notebook is gated on. */
+  await assertFails(
+    setDoc(doc(player("bob"), "parties/p_new/members", "mallory"), { role: "player", name: "mallory" }),
+  );
+});
+
+await check("a founder cannot make themselves the game master this way", async () => {
+  await assertFails(
+    setDoc(doc(player("bob"), "parties/p_new/members", "bob"), { role: "gm", name: "bob" }),
+  );
+});
+
+await check("somebody else's founder powers are not yours", async () => {
+  await assertFails(
+    setDoc(doc(player("carol"), "parties/p_new/members", "carol"), { role: "player", name: "carol" }),
   );
 });
 

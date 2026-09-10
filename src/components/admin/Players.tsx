@@ -1,7 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { createParty, setGameMaster } from "@/lib/firebase/party";
+import {
+  createParty,
+  setGameMaster,
+  seatMember,
+} from "@/lib/firebase/party";
 import type { Block } from "@/lib/firebase/block";
 import { aggregate, keepApart } from "@/lib/match";
 import { findArea, LIVE_LEBANON } from "@/data/lebanon";
@@ -123,7 +127,7 @@ export default function Players({ profiles, parties, blocks, spokenFor, onChange
 
       const [best] = [...tally.entries()].sort((a, b) => b[1] - a[1]);
 
-      await createParty({
+      const partyId = await createParty({
         name: name.trim() || `Party ${parties.length + 1}`,
         area: best?.[0] ?? chosen[0]?.area ?? "",
         playerIds: picked,
@@ -132,6 +136,14 @@ export default function Players({ profiles, parties, blocks, spokenFor, onChange
            and it must never be recomputed anywhere a player can read. */
         profile: aggregate(chosen),
       });
+
+      /* The key to the table, not just a name on its roster. Without this the
+         party exists and its own campaign page refuses everybody at it. */
+      await Promise.all(
+        chosen.map((one) =>
+          seatMember(partyId, { uid: one.uid, role: "player", name: one.username }),
+        ),
+      );
 
       setPicked([]);
       setName("");

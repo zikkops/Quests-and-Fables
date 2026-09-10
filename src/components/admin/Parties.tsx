@@ -1,7 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getChat, setInvite, updateParty } from "@/lib/firebase/party";
+import {
+  getChat,
+  setInvite,
+  updateParty,
+  seatMember,
+  unseatMember,
+} from "@/lib/firebase/party";
 import { findArea } from "@/data/lebanon";
 import type { Profile } from "@/lib/firebase/schema";
 import {
@@ -103,6 +109,32 @@ function One({
   const common = slotsIn(overlap(members.map((profile) => profile.week)));
   const areaLabel = findArea(party.area)?.area.name ?? party.area;
 
+  /*
+    Assigning a game master is two writes, and the second is the one that
+    matters. `gmId` on the party is the public fact; the member document is the
+    key to the table, and without it the game master's own campaign page
+    refuses them. Whoever held the key before gives it back.
+  */
+  const assignGm = async (next: string | null) => {
+    setError(null);
+    setBusy(true);
+
+    try {
+      const previous = party.gmId;
+      await updateParty(party.id, { gmId: next });
+      if (previous && previous !== next) await unseatMember(party.id, previous);
+      if (next) {
+        const who = profiles.find((profile) => profile.uid === next);
+        await seatMember(party.id, { uid: next, role: "gm", name: who?.username ?? next });
+      }
+      onChanged();
+    } catch (problem) {
+      setError((problem as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const change = async (patch: Parameters<typeof updateParty>[1]) => {
     setError(null);
     setBusy(true);
@@ -182,7 +214,7 @@ function One({
             className={styles.select}
             value={party.gmId ?? ""}
             disabled={busy || party.playerIds.length < PARTY_MIN}
-            onChange={(event) => change({ gmId: event.target.value || null })}
+            onChange={(event) => assignGm(event.target.value || null)}
           >
             <option value="">Nobody yet</option>
             {masters.map((profile) => (

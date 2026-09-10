@@ -15,6 +15,7 @@ import {
 } from "firebase/firestore";
 import { db, unavailable } from "./client";
 import { withTimeout } from "./reach";
+import type { Attendance } from "@/lib/attendance";
 import {
   NOTE_LIMIT,
   tagsFrom,
@@ -355,3 +356,24 @@ export async function openNight(partyId: string, title: string): Promise<PlaySes
 /** Close it. The notes stay; the book simply stops taking new ones tonight. */
 export const closeNight = (partyId: string, sessionId: string) =>
   updateDoc(doc(database(), NOTEBOOK_PATHS.sessions(partyId), sessionId), { open: false });
+
+/**
+ * Who turned up, written by the game master and nobody else.
+ *
+ * A whole map rather than one player at a time, because the game master marks
+ * the table in one go at the end of a night and five writes would be five
+ * chances for half of it to land.
+ *
+ * The rules check both halves of what makes this safe: the marks are one of
+ * the three, and every name in the map is somebody actually at this table. See
+ * `src/lib/attendance.ts` for why there are three and not two.
+ */
+export async function markAttendance(
+  partyId: string,
+  sessionId: string,
+  attendance: Attendance,
+): Promise<void> {
+  await updateDoc(doc(database(), NOTEBOOK_PATHS.sessions(partyId), sessionId), {
+    attendance,
+  });
+}
