@@ -60,7 +60,7 @@ export default function WeekGrid({ week, onChange }: Props) {
                   className={on ? `${styles.cell} ${styles.on}` : styles.cell}
                   onClick={() => onChange(toggle(week, dayIndex, blockIndex))}
                 >
-                  <span aria-hidden>{on ? "Free" : "—"}</span>
+                  <span aria-hidden>{on ? "Free" : "·"}</span>
                 </button>
               );
             })}

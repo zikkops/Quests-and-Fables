@@ -292,7 +292,7 @@ export default function Players({ profiles, parties, blocks, spokenFor, onChange
 
                     <td>{areaName(profile.area)}</td>
                     <td className={styles.areas}>
-                      {profile.playAreas.map(areaName).join(", ") || "—"}
+                      {profile.playAreas.map(areaName).join(", ") || "None"}
                     </td>
                     <td>{freeBlocks(profile.week)}</td>
                     <td>{profile.characterCount}</td>
